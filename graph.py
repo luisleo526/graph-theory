@@ -1,21 +1,51 @@
 import numpy as np
 from sympy.matrices import Matrix
-from sympy import symbols, Poly
-
+from sympy import symbols, LC
+from sympy.utilities.iterables import multiset_permutations
 
 class Graph:
 
     def __init__(self, n, graph):
         self.edges = graph
 
+        # Create adjacency matrix
         self.adj = np.zeros((2 * n, 2 * n))
         for (i, j) in self.edges:
             self.adj[i - 1, j - 1] = 1
         self.adj += self.adj.transpose()
 
-        x = symbols('x')
-        self.poly = Poly(Matrix(np.identity(2 * n) * x + self.adj).det(), x)
-        self.coeffs = self.poly.all_coeffs()
+        # Calculate invariant
+        self.invar = []
+        self.invar.append(Matrix(self.adj).charpoly(symbols('x')).as_expr())
+        for i in range(2 * n):
+            _adj = np.delete(np.delete(self.adj, i, 0), i, 1)
+            self.invar.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+
+        # Compare polynomials
+        diffs = []
+        for i in range(len(self.invar)):
+            ans = []
+            for j in range(len(self.invar)):
+                diff = self.invar[i] - self.invar[j]
+                if len(diff.free_symbols) == 0:
+                    ans.append(0)
+                else:
+                    ans.append(LC(diff))
+            diffs.append(sum([1 for x in ans if x > 0]))
+
+        # Standardization
+        self.permute_index = []
+        for e in sorted(set(diffs)):
+            vertices = []
+            for i in range(len(diffs)):
+                if diffs[i] == e:
+                    vertices.append(i)
+            self.permute_index.append(vertices)
+
+        # Find all permutations
+        self.permutation_sets = []
+        for index_set in self.permute_index[:-1]:
+            self.permutation_sets.append(list(multiset_permutations(index_set)))
 
 
 class GraphSets:
@@ -43,3 +73,16 @@ class GraphSets:
                     if int(vertices[i]) > int(vertices[0]):
                         graph.append((int(vertices[0]), int(vertices[i])))
             self.graphs.append(Graph(n=n, graph=graph))
+
+    def get_graph_info(self, i):
+        print("Graph:", self.graphs[i].edges)
+        print("Invariant:")
+        for j, poly in enumerate(self.graphs[i].invar):
+            print(f"P(G,{j})", poly)
+        print("Ordered Dictionary:", self.graphs[i].permute_index[:-1])
+        print(f"Permutation sets (Total {np.prod([len(sets) for sets in self.graphs[i].permutation_sets])}): ")
+        for j, permutation in enumerate(self.graphs[i].permutation_sets):
+            print(f"Set {j}:", permutation)
+
+    def get_number_of_graphs(self):
+        return len(self.graphs)
