@@ -2,15 +2,24 @@ import numpy as np
 from sympy.matrices import Matrix
 from sympy import symbols, LC
 from sympy.utilities.iterables import multiset_permutations
+from collections import Iterable
+
+def flatten(lis):
+     for item in lis:
+         if isinstance(item, Iterable) and not isinstance(item, str):
+             for x in flatten(item):
+                 yield x
+         else:
+             yield item
 
 class Graph:
 
     def __init__(self, n, graph):
-        self.edges = graph
+        self.G = graph
 
         # Create adjacency matrix
         self.adj = np.zeros((2 * n, 2 * n))
-        for (i, j) in self.edges:
+        for (i, j) in self.G:
             self.adj[i - 1, j - 1] = 1
         self.adj += self.adj.transpose()
 
@@ -42,10 +51,29 @@ class Graph:
                     vertices.append(i)
             self.permute_index.append(vertices)
 
+        ordinary = [x + 1 for x in range(2 * n)]
+        permute_index = list(flatten(self.permute_index))
+        self.standard_mapping = dict(zip(permute_index, ordinary))
+        self.standard_G = []
+        for edge in self.G:
+            self.standard_G.append((self.standard_mapping[edge[0]], self.standard_mapping[edge[1]]))
+
         # Find all permutations
         self.permutation_sets = []
         for index_set in self.permute_index[:-1]:
             self.permutation_sets.append(list(multiset_permutations(index_set)))
+
+        # Find all Z
+        self.z = np.zeros([len(x) for x in self.permutation_sets])
+        it = np.nditer(self.z, flags=["multi_index"], op_flags=["readwrite"])
+        #
+        # while not it.finished:
+        #     ordinary = [x + 1 for x in range(2 * n)]
+        #     mapping = []
+        #     for i in range(len(self.permutation_sets)):
+        #         mapping += self.permutation_sets[i][it.multi_index[i]]
+        #
+        #     it.iternext()
 
 
 class GraphSets:
@@ -75,14 +103,15 @@ class GraphSets:
             self.graphs.append(Graph(n=n, graph=graph))
 
     def get_graph_info(self, i):
-        print("Graph:", self.graphs[i].edges)
+        print("Graph:", self.graphs[i].G)
+        print("Standard Graph", self.graphs[i].standard_G)
+        print("Ordered Dictionary:", self.graphs[i].permute_index[:-1])
         print("Invariant:")
         for j, poly in enumerate(self.graphs[i].invar):
             print(f"P(G,{j})", poly)
-        print("Ordered Dictionary:", self.graphs[i].permute_index[:-1])
-        print(f"Permutation sets (Total {np.prod([len(sets) for sets in self.graphs[i].permutation_sets])}): ")
-        for j, permutation in enumerate(self.graphs[i].permutation_sets):
-            print(f"Set {j}:", permutation)
+        # print(f"Permutation sets (Total {np.prod([len(sets) for sets in self.graphs[i].permutation_sets])}): ")
+        # for j, permutation in enumerate(self.graphs[i].permutation_sets):
+        #     print(f"Set {j}:", permutation)
 
     def get_number_of_graphs(self):
         return len(self.graphs)
