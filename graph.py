@@ -4,13 +4,15 @@ from sympy import symbols, LC
 from sympy.utilities.iterables import multiset_permutations
 from collections import Iterable
 
+
 def flatten(lis):
-     for item in lis:
-         if isinstance(item, Iterable) and not isinstance(item, str):
-             for x in flatten(item):
-                 yield x
-         else:
-             yield item
+    for item in lis:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            for x in flatten(item):
+                yield x
+        else:
+            yield item
+
 
 class Graph:
 
@@ -103,15 +105,12 @@ class GraphSets:
             self.graphs.append(Graph(n=n, graph=graph))
 
     def get_graph_info(self, i):
-        print("Graph:", self.graphs[i].G)
-        print("Standard Graph", self.graphs[i].standard_G)
-        print("Ordered Dictionary:", self.graphs[i].permute_index[:-1])
-        print("Invariant:")
+        print("  G   :", self.graphs[i].G)
+        print(" f(G) :", self.graphs[i].standard_G)
+        print("  Tk  :", self.graphs[i].permute_index[:-1])
+        print("-" * 30)
         for j, poly in enumerate(self.graphs[i].invar):
-            print(f"P(G,{j})", poly)
-        # print(f"Permutation sets (Total {np.prod([len(sets) for sets in self.graphs[i].permutation_sets])}): ")
-        # for j, permutation in enumerate(self.graphs[i].permutation_sets):
-        #     print(f"Set {j}:", permutation)
+            print(f"P(G,{j:2d}) :", poly)
 
-    def get_number_of_graphs(self):
+    def number_of_graphs(self):
         return len(self.graphs)
