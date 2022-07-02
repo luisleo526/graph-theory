@@ -165,6 +165,9 @@ class Graph:
         if self.permutation_sets is None:
             self.calculate_permutations()
 
+        if len(self.permutation_sets) == 1:
+            return
+
         self.z = np.zeros([len(x) for x in self.permutation_sets], dtype=np.int8)
         self.equivalent = np.zeros([len(x) for x in self.permutation_sets], dtype=np.bool)
 
