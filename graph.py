@@ -1,5 +1,3 @@
-from __future__ import print_function
-import pymp
 import numpy as np
 import math
 from sympy.matrices import Matrix
@@ -65,6 +63,10 @@ class Graph:
 
     def __init__(self, graph):
 
+        self.orientable = None
+        self.equivalent = None
+        self.z = None
+        self.invar_poly = None
         self.permutation_sets = None
         self.permute_index = None
         self.invar_diffs = None
@@ -76,25 +78,29 @@ class Graph:
 
     def calculate_invariant(self):
 
-        self.adj = np.zeros((self.n, self.n))
+        self.adj = np.zeros((self.n, self.n), dtype=np.int8)
         for (i, j) in self.graph:
             self.adj[i - 1, j - 1] = 1
         self.adj += self.adj.transpose()
 
-        self.invar = []
+        self.invar_poly = []
         self.invar_coeff = []
-        self.invar.append(Matrix(self.adj).charpoly(symbols('x')).as_expr())
+
+        self.invar_poly.append(Matrix(self.adj).charpoly(symbols('x')).as_expr())
+        self.invar_coeff.append(poly(self.invar_poly[-1]).all_coeffs())
+
         for i in range(self.n):
             _adj = np.delete(np.delete(self.adj, i, 0), i, 1)
-            self.invar.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
-            self.invar_coeff.append(poly(self.invar[-1]).all_coeffs())
+            self.invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+            self.invar_coeff.append(poly(self.invar_poly[-1]).all_coeffs())
+        self.invar = sorted(set([tuple(x) for x in self.invar_coeff]))
 
         # Compare polynomials
         self.invar_diffs = []
-        for i in range(len(self.invar)):
+        for i in range(len(self.invar_poly)):
             ans = []
-            for j in range(len(self.invar)):
-                diff = self.invar[i] - self.invar[j]
+            for j in range(len(self.invar_poly)):
+                diff = self.invar_poly[i] - self.invar_poly[j]
                 if len(diff.free_symbols) == 0:
                     ans.append(0)
                 else:
@@ -102,13 +108,16 @@ class Graph:
                         k = i
                     else:
                         k = j
-                    if abs(self.invar[k].coeff(LM(diff))) > 1e-10:
+                    if abs(self.invar_poly[k].coeff(LM(diff))) > 1e-10:
                         ans.append(LC(diff))
                     else:
                         ans.append(-LC(diff))
             self.invar_diffs.append(sum([1 for x in ans if x > 0]))
 
     def calculate_permutations(self):
+
+        if self.invar_diffs is None:
+            self.calculate_invariant()
 
         self.permute_index = []
         for e in sorted(set(self.invar_diffs)):
@@ -118,12 +127,58 @@ class Graph:
                     vertices.append(i)
             self.permute_index.append(vertices)
 
+        self.permute_index = self.permute_index[:-1]
+
         self.permutation_sets = []
         base = 1
-        for index_set in self.permute_index[:-1]:
-            _index_set = [base + i for i in range(len(index_set))]
-            base += len(index_set)
-            self.permutation_sets.append(list(multiset_permutations(_index_set)))
+        for index_set in self.permute_index:
+            self.permutation_sets.append(list(multiset_permutations(index_set)))
+
+    def print_info(self):
+
+        if self.invar is None:
+            self.calculate_invariant()
+
+        if self.permute_index is None:
+            self.calculate_permutations()
+
+        if self.orientable is None:
+            self.get_all_Z()
+
+        print("graph:", self.graph)
+        print("orientable:", self.orientable)
+        print("permute index:", self.permute_index)
+        print("invariant:")
+        for j, invar in enumerate(self.invar):
+            print(f"({j + 1}):", invar)
+
+    def equal(self, graph):
+        if self.invar is None:
+            self.calculate_invariant()
+        if graph.invar is None:
+            graph.calculate_invariant()
+
+        return set(self.invar) == set(graph.invar)
+
+    def get_all_Z(self):
+
+        if self.permutation_sets is None:
+            self.calculate_permutations()
+
+        self.z = np.zeros([len(x) for x in self.permutation_sets], dtype=np.int8)
+        self.equivalent = np.zeros([len(x) for x in self.permutation_sets], dtype=np.bool)
+
+        it = np.nditer(self.z, flags=["multi_index"], op_flags=["readwrite"])
+        while not it.finished:
+            permutation = []
+            for i in range(len(self.permutation_sets)):
+                permutation += self.permutation_sets[i][it.multi_index[i]]
+            sub_graph = Graph(graph_permuation(self.graph, permutation))
+            self.z[it.multi_index] = compute_Z(self.graph, sub_graph.graph)
+            self.equivalent[it.multi_index] = self.equal(sub_graph)
+            it.iternext()
+
+        self.orientable = not np.any(-self.z * self.equivalent)
 
 
 class AGraph(Graph):
@@ -136,22 +191,15 @@ class AGraph(Graph):
         self.calculate_permutations()
         self.standard_G = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True))
 
-        # Create Z matrix to store results for all permutations
-        self.z = np.zeros([len(x) for x in self.permutation_sets])
+    def print_infos(self):
+        self.standard_G.get_all_Z()
         self.get_all_Z()
-
-    def get_Z(self, permutation):
-        return compute_Z(self.standard_G.graph, graph_permuation(self.standard_G.graph, permutation))
-
-    def get_all_Z(self):
-        it = np.nditer(self.z, flags=["multi_index"], op_flags=["readwrite"])
-        while not it.finished:
-            permutation = []
-            for i in range(len(self.permutation_sets)):
-                permutation += self.permutation_sets[i][it.multi_index[i]]
-            self.z[it.multi_index] = self.get_Z(permutation)
-            it.iternext()
-        self.orientable = -1 not in self.z
+        print("Original graph info:")
+        print('-'*30)
+        self.print_info()
+        print("\nStandard graph info:")
+        print('-' * 30)
+        self.standard_G.print_info()
 
 
 class GraphSets:
@@ -184,15 +232,7 @@ class GraphSets:
         print("CPU time:", it_end - it_start)
 
     def get_graph_info(self, i):
-        print(f"id:{i}")
-        print("-" * 30)
-        print("  G   :", self.graphs[i].graph)
-        print(" f(G) :", self.graphs[i].standard_G.graph)
-        print("  Tk  :", self.graphs[i].permute_index[:-1])
-        print("Orientable:", self.graphs[i].orientable)
-        print("-" * 30)
-        for j, poly in enumerate(self.graphs[i].invar):
-            print(f"P(G,{j:2d}) :", poly)
+        self.graphs[i].print_infos()
 
     def number_of_graphs(self):
         return len(self.graphs)
