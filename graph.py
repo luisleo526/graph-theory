@@ -114,7 +114,7 @@ class Graph:
                         ans.append(-LC(diff))
             self.invar_diffs.append(sum([1 for x in ans if x > 0]))
 
-    def calculate_permutations(self):
+    def calculate_permute_index(self):
 
         if self.invar_diffs is None:
             self.calculate_invariant()
@@ -128,6 +128,11 @@ class Graph:
             self.permute_index.append(vertices)
 
         self.permute_index = self.permute_index[:-1]
+
+    def calculate_permutations(self):
+
+        if self.permute_index is None:
+            self.calculate_permute_index()
 
         self.permutation_sets = []
         base = 1
@@ -148,6 +153,7 @@ class Graph:
         print("graph:", self.graph)
         print("orientable:", self.orientable)
         print("permute index:", self.permute_index)
+        print("number of permutations:", np.prod([len(x) for x in self.permutation_sets]))
         print("invariant:")
         for j, invar in enumerate(self.invar):
             print(f"({j + 1}):", invar)
@@ -183,26 +189,41 @@ class Graph:
 
         self.orientable = not np.any(-self.z * self.equivalent)
 
+    def release_memory(self):
+
+        self.orientable = None
+        self.equivalent = None
+        self.z = None
+        self.invar_poly = None
+        self.permutation_sets = None
+        self.permute_index = None
+        self.invar_diffs = None
+        self.invar_coeff = None
+        self.invar = None
+        self.adj = None
+
 
 class AGraph(Graph):
 
     def __init__(self, graph):
         super(AGraph, self).__init__(graph)
-        self.orientable = None
+        self.sgraph = None
 
-        self.calculate_invariant()
-        self.calculate_permutations()
-        self.standard_G = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True))
+    def standard(self):
+        if self.sgraph is None:
+            self.calculate_permute_index()
+            self.sgraph = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True))
+
+        return self.sgraph
 
     def print_infos(self):
-        self.standard_G.get_all_Z()
-        self.get_all_Z()
+
         print("Original graph info:")
-        print('-'*30)
+        print('-' * 30)
         self.print_info()
         print("\nStandard graph info:")
         print('-' * 30)
-        self.standard_G.print_info()
+        self.sgraph.print_info()
 
 
 class GraphSets:
