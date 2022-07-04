@@ -1,6 +1,6 @@
 import argparse
 from graph import GraphSets
-import multiprocessing as mp
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -8,8 +8,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", default=1, type=int)
     args = parser.parse_args()
 
-    pool = mp.Pool(processes=args.t)
-    g = GraphSets(n=args.n, pool=pool)
+    g = GraphSets(n=args.n, threads=args.t)
 
     with open(f"{args.n}-results.txt", 'w') as f:
         for i, graph in enumerate(g.graphs):
