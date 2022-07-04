@@ -71,7 +71,7 @@ def compute_Z(graph_a, graph_b):
 
 class Graph:
 
-    def __init__(self, graph, threads=1):
+    def __init__(self, graph, pool=None):
 
         self.dim = None
         self.orientable = None
@@ -87,7 +87,7 @@ class Graph:
 
         self.graph = graph
         self.n = max([max(x) for x in self.graph])
-        self.threads = threads
+        self.pool = pool
 
     def calculate_invariant(self):
 
@@ -197,14 +197,13 @@ class Graph:
         if self.permutation_sets is None:
             self.calculate_permutations()
 
-        if np.prod(self.dim) > 100000:
+        if np.prod(self.dim) > 1000000:
             return
 
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
         self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
 
-        pool = mp.Pool(processes=self.threads)
-        pool.map(self._get_all_Z, [x for x in range(self.z.size)])
+        self.pool.map(self._get_all_Z, [x for x in range(self.z.size)])
 
         self.orientable = not np.any(-self.z * self.equivalent)
 
@@ -225,15 +224,15 @@ class Graph:
 
 class AGraph(Graph):
 
-    def __init__(self, graph, threads=1):
-        super(AGraph, self).__init__(graph, threads)
+    def __init__(self, graph, pool=None):
+        super(AGraph, self).__init__(graph, pool)
         self.sgraph = None
 
     def standard(self):
         if self.sgraph is None:
             self.calculate_permute_index()
             self.sgraph = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True),
-                                threads=self.threads)
+                                pool=self.pool)
 
         return self.sgraph
 
@@ -256,7 +255,7 @@ class AGraph(Graph):
 
 class GraphSets:
 
-    def __init__(self, n=3, threads=1):
+    def __init__(self, n=3, pool=None):
 
         with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
             lines = f.readlines()
@@ -279,7 +278,7 @@ class GraphSets:
                 for i in range(1, len(vertices)):
                     if int(vertices[i]) > int(vertices[0]):
                         graph.append((int(vertices[0]), int(vertices[i])))
-            self.graphs.append(AGraph(graph=graph, threads=threads))
+            self.graphs.append(AGraph(graph=graph, pool=pool))
         it_end = process_time()
         print("CPU time:", it_end - it_start)
 
