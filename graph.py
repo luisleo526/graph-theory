@@ -248,7 +248,7 @@ class AGraph(Graph):
 
         return msg
 
-    def release_memory(self):
+    def release_all_memory(self):
         self.release_memory()
         if self.sgraph is not None:
             self.sgraph.release_memory()

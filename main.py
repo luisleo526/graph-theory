@@ -14,4 +14,4 @@ if __name__ == '__main__':
             f.write(f"A({args.n*2}, {i+1})\n")
             f.write(graph.infos())
             f.write("-"*30+"\n")
-            graph.release_memory()
+            graph.release_all_memory()
