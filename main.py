@@ -13,5 +13,5 @@ if __name__ == '__main__':
         for i, graph in enumerate(g.graphs):
             f.write(f"A({args.n*2}, {i+1})\n")
             f.write(graph.infos())
-            f.write("-"*30+"\n")
+            f.write("="*30+"\n\n")
             graph.release_all_memory()
