@@ -197,7 +197,7 @@ class Graph:
         if self.permutation_sets is None:
             self.calculate_permutations()
 
-        if any(x > 720 for x in self.dim):
+        if np.prod(self.dim) > 100000:
             return
 
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
