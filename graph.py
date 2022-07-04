@@ -167,7 +167,7 @@ class Graph:
         msg += print_to_string("graph:", self.graph)
         msg += print_to_string("orientable:", self.orientable)
         msg += print_to_string("permute index:", self.permute_index)
-        msg += print_to_string("number of permutations:", np.prod([len(x) for x in self.permutation_sets]))
+        msg += print_to_string("number of permutations:", np.prod(self.dim))
         msg += print_to_string("invariant:")
         for j, invar in enumerate(self.invar):
             msg += print_to_string(f"({j + 1}):", invar)
@@ -197,7 +197,7 @@ class Graph:
         if self.permutation_sets is None:
             self.calculate_permutations()
 
-        if any(x > 6 for x in self.dim):
+        if any(x > 720 for x in self.dim):
             return
 
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
