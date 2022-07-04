@@ -150,6 +150,7 @@ class Graph:
         self.permutation_sets = []
         for index_set in self.permute_index:
             self.permutation_sets.append(list(multiset_permutations(index_set)))
+        self.dim = [len(x) for x in self.permutation_sets]
 
     def info(self):
 
@@ -196,10 +197,9 @@ class Graph:
         if self.permutation_sets is None:
             self.calculate_permutations()
 
-        if len(self.permutation_sets) == 1:
+        if any(x > 6 for x in self.dim):
             return
 
-        self.dim = [len(x) for x in self.permutation_sets]
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
         self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
 
