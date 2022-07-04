@@ -203,9 +203,8 @@ class Graph:
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
         self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
 
-        pool = mp.Pool(processes=self.threads)
-        pool.map(self._get_all_Z, [x for x in range(self.z.size)])
-        del pool
+        with mp.Pool(processes=self.threads) as pool:
+            pool.map(self._get_all_Z, [x for x in range(self.z.size)])
 
         self.orientable = not np.any(-self.z * self.equivalent)
 
