@@ -12,3 +12,4 @@ if __name__ == '__main__':
     with open(f"{args.n}-results.txt", 'w') as f:
         for graph in g.graphs:
             f.write(graph.infos())
+            graph.release_memory()
