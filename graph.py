@@ -5,6 +5,16 @@ from sympy import symbols, LC, LM, poly
 from sympy.utilities.iterables import multiset_permutations
 from collections import Iterable
 from time import process_time
+import multiprocessing as mp
+import io
+
+
+def print_to_string(*args, **kwargs):
+    output = io.StringIO()
+    print(*args, file=output, **kwargs)
+    contents = output.getvalue()
+    output.close()
+    return contents
 
 
 def sign(x):
@@ -61,8 +71,9 @@ def compute_Z(graph_a, graph_b):
 
 class Graph:
 
-    def __init__(self, graph):
+    def __init__(self, graph, threads):
 
+        self.dim = None
         self.orientable = None
         self.equivalent = None
         self.z = None
@@ -73,8 +84,10 @@ class Graph:
         self.invar_coeff = None
         self.invar = None
         self.adj = None
+
         self.graph = graph
         self.n = max([max(x) for x in self.graph])
+        self.threads = threads
 
     def calculate_invariant(self):
 
@@ -135,11 +148,10 @@ class Graph:
             self.calculate_permute_index()
 
         self.permutation_sets = []
-        base = 1
         for index_set in self.permute_index:
             self.permutation_sets.append(list(multiset_permutations(index_set)))
 
-    def print_info(self):
+    def info(self):
 
         if self.invar is None:
             self.calculate_invariant()
@@ -150,13 +162,16 @@ class Graph:
         if self.orientable is None:
             self.get_all_Z()
 
-        print("graph:", self.graph)
-        print("orientable:", self.orientable)
-        print("permute index:", self.permute_index)
-        print("number of permutations:", np.prod([len(x) for x in self.permutation_sets]))
-        print("invariant:")
+        msg = ""
+        msg += print_to_string("graph:", self.graph)
+        msg += print_to_string("orientable:", self.orientable)
+        msg += print_to_string("permute index:", self.permute_index)
+        msg += print_to_string("number of permutations:", np.prod([len(x) for x in self.permutation_sets]))
+        msg += print_to_string("invariant:")
         for j, invar in enumerate(self.invar):
-            print(f"({j + 1}):", invar)
+            msg += print_to_string(f"({j + 1}):", invar)
+
+        return msg
 
     def equal(self, graph):
         if self.invar is None:
@@ -166,6 +181,16 @@ class Graph:
 
         return set(self.invar) == set(graph.invar)
 
+    def _get_all_Z(self, i):
+
+        permutation = []
+        indices = np.unravel_index(i, self.dim)
+        for j in range(len(self.permutation_sets)):
+            permutation += self.permutation_sets[j][indices[j]]
+        sub_graph = Graph(graph_permuation(self.graph, permutation))
+        self.z[i] = compute_Z(self.graph, sub_graph.graph)
+        self.equivalent[i] = self.equal(sub_graph)
+
     def get_all_Z(self):
 
         if self.permutation_sets is None:
@@ -174,24 +199,19 @@ class Graph:
         if len(self.permutation_sets) == 1:
             return
 
-        self.z = np.zeros([len(x) for x in self.permutation_sets], dtype=np.int8)
-        self.equivalent = np.zeros([len(x) for x in self.permutation_sets], dtype=np.bool)
+        self.dim = [len(x) for x in self.permutation_sets]
+        self.z = np.zeros(self.dim, dtype=np.int8).flatten()
+        self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
 
-        it = np.nditer(self.z, flags=["multi_index"], op_flags=["readwrite"])
-        while not it.finished:
-            permutation = []
-            for i in range(len(self.permutation_sets)):
-                permutation += self.permutation_sets[i][it.multi_index[i]]
-            sub_graph = Graph(graph_permuation(self.graph, permutation))
-            self.z[it.multi_index] = compute_Z(self.graph, sub_graph.graph)
-            self.equivalent[it.multi_index] = self.equal(sub_graph)
-            it.iternext()
+        pool = mp.Pool(processes=self.threads)
+        pool.map(self._get_all_Z, [x for x in range(self.z.size)])
 
         self.orientable = not np.any(-self.z * self.equivalent)
 
     def release_memory(self):
 
-        self.orientable = None
+        self.dim = None
+        # self.orientable = None
         self.equivalent = None
         self.z = None
         self.invar_poly = None
@@ -199,36 +219,39 @@ class Graph:
         self.permute_index = None
         self.invar_diffs = None
         self.invar_coeff = None
-        self.invar = None
+        # self.invar = None
         self.adj = None
 
 
 class AGraph(Graph):
 
-    def __init__(self, graph):
-        super(AGraph, self).__init__(graph)
+    def __init__(self, graph, threads=1):
+        super(AGraph, self).__init__(graph, threads)
         self.sgraph = None
 
     def standard(self):
         if self.sgraph is None:
             self.calculate_permute_index()
-            self.sgraph = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True))
+            self.sgraph = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True),
+                                threads=self.threads)
 
         return self.sgraph
 
-    def print_infos(self):
+    def infos(self):
+        msg = ""
+        msg += print_to_string("Original graph info:")
+        msg += print_to_string('-' * 30)
+        msg += self.info()
+        msg += print_to_string("\nStandard graph info:")
+        msg += print_to_string('-' * 30)
+        msg += self.standard().info()
 
-        print("Original graph info:")
-        print('-' * 30)
-        self.print_info()
-        print("\nStandard graph info:")
-        print('-' * 30)
-        self.sgraph.print_info()
+        return msg
 
 
 class GraphSets:
 
-    def __init__(self, n=3):
+    def __init__(self, n=3, threads=1):
 
         with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
             lines = f.readlines()
@@ -251,12 +274,12 @@ class GraphSets:
                 for i in range(1, len(vertices)):
                     if int(vertices[i]) > int(vertices[0]):
                         graph.append((int(vertices[0]), int(vertices[i])))
-            self.graphs.append(AGraph(graph=graph))
+            self.graphs.append(AGraph(graph=graph, threads=threads))
         it_end = process_time()
         print("CPU time:", it_end - it_start)
 
-    def get_graph_info(self, i):
-        self.graphs[i].print_infos()
+    def print_graph_info(self, i):
+        print(self.graphs[i].infos())
 
     def number_of_graphs(self):
         return len(self.graphs)
