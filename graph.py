@@ -71,7 +71,7 @@ def compute_Z(graph_a, graph_b):
 
 class Graph:
 
-    def __init__(self, graph, threads):
+    def __init__(self, graph, threads=1):
 
         self.dim = None
         self.orientable = None
@@ -247,6 +247,11 @@ class AGraph(Graph):
         msg += self.standard().info()
 
         return msg
+
+    def release_memory(self):
+        self.graph.release_memory()
+        if self.sgraph is not None:
+            self.sgraph.release_memory()
 
 
 class GraphSets:
