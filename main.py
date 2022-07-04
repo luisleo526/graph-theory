@@ -10,6 +10,8 @@ if __name__ == '__main__':
     g = GraphSets(n=args.n, threads=args.t)
 
     with open(f"{args.n}-results.txt", 'w') as f:
-        for graph in g.graphs:
+        for i, graph in enumerate(g.graphs):
+            f.write(f"A({args.n*2}, {i+1})\n")
             f.write(graph.infos())
+            f.write("-"*30+"\n")
             graph.release_memory()
