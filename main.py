@@ -5,7 +5,7 @@ from graph import GraphSets
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=2, type=int)
-    parser.add_argument("-t", default=1, type=int)
+    parser.add_argument("-t", default=8, type=int)
     args = parser.parse_args()
 
     g = GraphSets(n=args.n, threads=args.t)

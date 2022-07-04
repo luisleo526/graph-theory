@@ -18,7 +18,7 @@ def print_to_string(*args, **kwargs):
 
 
 def sign(x):
-    return math.copysign(1, x)
+    return np.int8(math.copysign(1, x))
 
 
 def flatten(lis):
@@ -189,22 +189,26 @@ class Graph:
         for j in range(len(self.permutation_sets)):
             permutation += self.permutation_sets[j][indices[j]]
         sub_graph = Graph(graph_permuation(self.graph, permutation))
-        self.z[i] = compute_Z(self.graph, sub_graph.graph)
-        self.equivalent[i] = self.equal(sub_graph)
+
+        return i, compute_Z(self.graph, sub_graph.graph), self.equal(sub_graph)
 
     def get_all_Z(self):
 
         if self.permutation_sets is None:
             self.calculate_permutations()
 
-        if np.prod(self.dim) > 100000:
+        if np.prod(self.dim) > 1000000:
             return
 
         self.z = np.zeros(self.dim, dtype=np.int8).flatten()
         self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
 
         with mp.Pool(processes=self.threads) as pool:
-            pool.map(self._get_all_Z, [x for x in range(self.z.size)])
+            results = pool.map(self._get_all_Z, [x for x in range(self.z.size)])
+
+        for result in results:
+            self.z[result[0]] = np.int8(result[1])
+            self.equivalent[result[0]] = np.bool(result[2])
 
         self.orientable = not np.any(-self.z * self.equivalent)
 
