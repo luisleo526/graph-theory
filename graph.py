@@ -7,6 +7,7 @@ from collections import Iterable
 from time import process_time
 import multiprocessing as mp
 import io
+import networkx as nx
 
 
 def print_to_string(*args, **kwargs):
@@ -73,6 +74,7 @@ class Graph:
 
     def __init__(self, graph, threads=1):
 
+        self.er_sets = None
         self.dim = None
         self.orientable = None
         self.equivalent = None
@@ -89,12 +91,21 @@ class Graph:
         self.n = max([max(x) for x in self.graph])
         self.threads = threads
 
-    def calculate_invariant(self):
-
+    def calculate_adj(self):
         self.adj = np.zeros((self.n, self.n), dtype=np.int8)
         for (i, j) in self.graph:
             self.adj[i - 1, j - 1] = 1
         self.adj += self.adj.transpose()
+
+    def plot(self):
+        if self.adj is None:
+            self.calculate_adj()
+        return nx.draw(nx.from_numpy_matrix(self.adj, create_using=nx.MultiGraph), with_labels=True)
+
+    def calculate_invariant(self):
+
+        if self.adj is None:
+            self.calculate_adj()
 
         self.invar_poly = []
         self.invar_coeff = []
@@ -226,11 +237,28 @@ class Graph:
         # self.invar = None
         self.adj = None
 
+    def calculate_edge_reduction(self):
+        self.er_sets = []
+        for i in range(self.adj.shape[0]):
+            for j in range(i, self.adj.shape[0]):
+                if self.adj[i][j] == 1:
+                    if all(x < 2 for x in self.adj[i] + self.adj[j]):
+                        tri = np.triu(self.adj, 0)
+                        tri[i] = tri[i] + tri[j]
+                        _adj = np.delete(np.delete(tri, j, 0), j, 1)
+                        _adj = _adj + _adj.transpose()
+                        graphs = []
+                        for ii in range(_adj.shape[0]):
+                            for jj in range(ii, _adj.shape[0]):
+                                if _adj[ii, jj] == 1:
+                                    graphs.append((ii + 1, jj + 1))
+                        self.er_sets.append(graphs)
 
-class AGraph(Graph):
+
+class OGraph(Graph):
 
     def __init__(self, graph, threads=1):
-        super(AGraph, self).__init__(graph, threads)
+        super(OGraph, self).__init__(graph, threads)
         self.sgraph = None
 
     def standard(self):
@@ -274,7 +302,6 @@ class GraphSets:
         for start, end in zip(start_index, end_index):
             _graphs.append(lines[start + 1:end - 1])
 
-        it_start = process_time()
         self.graphs = []
         for _graph in _graphs:
             graph = []
@@ -283,9 +310,7 @@ class GraphSets:
                 for i in range(1, len(vertices)):
                     if int(vertices[i]) > int(vertices[0]):
                         graph.append((int(vertices[0]), int(vertices[i])))
-            self.graphs.append(AGraph(graph=graph, threads=threads))
-        it_end = process_time()
-        print("CPU time:", it_end - it_start)
+            self.graphs.append(OGraph(graph=graph, threads=threads))
 
     def print_graph_info(self, i):
         print(self.graphs[i].infos())
