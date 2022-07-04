@@ -1,10 +1,8 @@
 import numpy as np
-import math
 from sympy.matrices import Matrix
 from sympy import symbols, LC, LM, poly
 from sympy.utilities.iterables import multiset_permutations
 from collections import Iterable
-from time import process_time
 import multiprocessing as mp
 import io
 import networkx as nx
@@ -18,10 +16,6 @@ def print_to_string(*args, **kwargs):
     return contents
 
 
-def sign(x):
-    return np.int8(math.copysign(1, x))
-
-
 def flatten(lis):
     for item in lis:
         if isinstance(item, Iterable) and not isinstance(item, str):
@@ -29,25 +23,6 @@ def flatten(lis):
                 yield x
         else:
             yield item
-
-
-def graph_permuation(src_graph, tgt_index, sort=False):
-    tgt_index = list(flatten(tgt_index))
-    src_index = [i + 1 for i in range(len(tgt_index))]
-    mapping = dict(zip(tgt_index, src_index))
-
-    tgt_graph = []
-    for a, b in src_graph:
-        c, d = mapping[a], mapping[b]
-        if c > d:
-            tgt_graph.append((d, c))
-        else:
-            tgt_graph.append((c, d))
-
-    if sort:
-        return sorted(tgt_graph)
-    else:
-        return tgt_graph
 
 
 def compute_Y(edge_a1, edge_a2, edge_b1, edge_b2):
@@ -65,194 +40,256 @@ def compute_Z(graph_a, graph_b):
     for i in range(num_edges):
         for j in range(i + 1, num_edges):
             if i != j:
-                result *= sign(compute_Y(graph_a[i], graph_a[j], graph_b[i], graph_b[j]))
+                result *= compute_Y(graph_a[i], graph_a[j], graph_b[i], graph_b[j])
 
     return result
 
 
 class Graph:
+    """
+         self << f  : f(G)
+         abs(self)  : sG
+         bool(self) : self.orientable
+    """
 
     def __init__(self, graph, threads=1):
 
-        self.er_sets = None
-        self.dim = None
-        self.orientable = None
-        self.equivalent = None
-        self.z = None
-        self.invar_poly = None
-        self.permutation_sets = None
-        self.permute_index = None
-        self.invar_diffs = None
-        self.invar_coeff = None
-        self.invar = None
-        self.adj = None
+        self._sG = None
+        self._er_sets = None
+        self._equiv = None
+        self._z = None
+        self._permutation_sets = None
+        self._permute_indices = None
+        self._invar = None
+        self._invar_poly = None
+        self._adj = None
 
         self.graph = graph
+        self.sort()
         self.n = max([max(x) for x in self.graph])
         self.threads = threads
 
-    def calculate_adj(self):
-        self.adj = np.zeros((self.n, self.n), dtype=np.int8)
-        for (i, j) in self.graph:
-            self.adj[i - 1, j - 1] = 1
-        self.adj += self.adj.transpose()
+    def __hash__(self):
+        msg = ""
+        for a, b in self.G:
+            msg += f"{a}{b}"
+        return hash(msg)
+
+    def __eq__(self, other):
+        return np.array_equal(self.adj, other.adj)
+
+    def __abs__(self):
+        return self.sG
+
+    def __lshift__(self, f):
+
+        tgt_index = list(flatten(f))
+        src_index = [i + 1 for i in range(self.n)]
+        mapping = dict(zip(tgt_index, src_index))
+
+        tgt_graph = []
+        for a, b in self.graph:
+            c, d = mapping[a], mapping[b]
+            if c > d:
+                tgt_graph.append((d, c))
+            else:
+                tgt_graph.append((c, d))
+
+        new_graph = Graph(tgt_graph, self.threads)
+        new_graph.sort()
+
+        return new_graph
+
+    def order(self):
+        graph = []
+        for a, b in self.graph:
+            if a > b:
+                graph.append((b, a))
+            else:
+                graph.append((a, b))
+        self.graph = graph
+
+    def sort(self):
+        self.order()
+        self.graph = sorted(self.graph)
+
+    @property
+    def sG(self):
+        if self._sG is None:
+            self._sG = self << self.permute_indices
+        return self._sG
+
+    @property
+    def G(self):
+        return self.graph
+
+    @property
+    def adj(self):
+        if self._adj is None:
+            self._adj = np.zeros((self.n, self.n), dtype=np.int8)
+            for (i, j) in self.G:
+                self._adj[i - 1, j - 1] = 1
+            self._adj += self._adj.transpose()
+
+        return self._adj
+
+    @property
+    def invar_poly(self):
+
+        if self._invar_poly is None:
+            self._invar_poly = []
+            self._invar_poly.append(Matrix(self.adj).charpoly(symbols('x')).as_expr())
+            for i in range(self.n):
+                _adj = np.delete(np.delete(self.adj, i, 0), i, 1)
+                self._invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+
+        return self._invar_poly
+
+    @property
+    def invar(self):
+        if self._invar is None:
+            invar_coeff = []
+            for expr in self.invar_poly:
+                invar_coeff.append(poly(expr).all_coeffs())
+            self._invar = sorted(set([tuple(x) for x in invar_coeff]))
+
+        return self._invar
+
+    @property
+    def permute_indices(self):
+        if self._permute_indices is None:
+            invar_diffs = []
+            for i in range(len(self.invar_poly)):
+                ans = []
+                for j in range(len(self.invar_poly)):
+                    diff = self.invar_poly[i] - self.invar_poly[j]
+                    if len(diff.free_symbols) == 0:
+                        ans.append(0)
+                    else:
+                        if LC(diff) > 0:
+                            k = i
+                        else:
+                            k = j
+                        if abs(self.invar_poly[k].coeff(LM(diff))) > 1e-10:
+                            ans.append(LC(diff))
+                        else:
+                            ans.append(-LC(diff))
+                invar_diffs.append(sum([1 for x in ans if x > 0]))
+
+            self._permute_indices = []
+            for e in sorted(set(invar_diffs)):
+                vertices = []
+                for i in range(len(invar_diffs)):
+                    if invar_diffs[i] == e:
+                        vertices.append(i)
+                self._permute_indices.append(vertices)
+
+            self._permute_indices = self._permute_indices[:-1]
+
+        return self._permute_indices
+
+    @property
+    def permutation_sets(self):
+
+        if self._permutation_sets is None:
+            self._permutation_sets = []
+            for index_set in self.permute_indices:
+                self._permutation_sets.append(list(multiset_permutations(index_set)))
+
+        return self._permutation_sets
+
+    @property
+    def permutation_dim(self):
+        return [len(x) for x in self.permutation_sets]
+
+    @property
+    def z(self):
+        if self._z is None:
+            self.get_z()
+        return self._z
+
+    @property
+    def equiv(self):
+        if self._equiv is None:
+            self.get_z()
+        return self._equiv
+
+    @property
+    def orientable(self):
+        return not np.any(abs(x + 1.0) < 1e-10 and y for x, y in zip(self.z, self.equiv))
 
     def plot(self):
-        if self.adj is None:
-            self.calculate_adj()
-        return nx.draw(nx.from_numpy_matrix(self.adj, create_using=nx.MultiGraph), with_labels=True)
+        graph = nx.from_numpy_matrix(self.adj, create_using=nx.MultiGraph)
+        return nx.draw(graph, with_labels=True, pos=nx.shell_layout(graph))
 
-    def calculate_invariant(self):
+    def _get_z(self, i):
 
-        if self.adj is None:
-            self.calculate_adj()
+        permutation = []
+        indices = np.unravel_index(i, self.permutation_dim)
+        for j in range(len(self.permutation_sets)):
+            permutation += self.permutation_sets[j][indices[j]]
+        sub_graph = self << permutation
 
-        self.invar_poly = []
-        self.invar_coeff = []
+        return i, compute_Z(self.G, sub_graph.graph), self == sub_graph
 
-        self.invar_poly.append(Matrix(self.adj).charpoly(symbols('x')).as_expr())
-        self.invar_coeff.append(poly(self.invar_poly[-1]).all_coeffs())
+    def get_z(self):
 
-        for i in range(self.n):
-            _adj = np.delete(np.delete(self.adj, i, 0), i, 1)
-            self.invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
-            self.invar_coeff.append(poly(self.invar_poly[-1]).all_coeffs())
-        self.invar = sorted(set([tuple(x) for x in self.invar_coeff]))
+        if np.prod(self.permutation_dim) > 1000000:
+            return
 
-        # Compare polynomials
-        self.invar_diffs = []
-        for i in range(len(self.invar_poly)):
-            ans = []
-            for j in range(len(self.invar_poly)):
-                diff = self.invar_poly[i] - self.invar_poly[j]
-                if len(diff.free_symbols) == 0:
-                    ans.append(0)
-                else:
-                    if LC(diff) > 0:
-                        k = i
-                    else:
-                        k = j
-                    if abs(self.invar_poly[k].coeff(LM(diff))) > 1e-10:
-                        ans.append(LC(diff))
-                    else:
-                        ans.append(-LC(diff))
-            self.invar_diffs.append(sum([1 for x in ans if x > 0]))
+        self._z = np.zeros(self.permutation_dim, dtype=np.float32).flatten()
+        self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
-    def calculate_permute_index(self):
+        with mp.Pool(processes=self.threads) as pool:
+            results = pool.map(self._get_z, [x for x in range(np.prod(self.permutation_dim))])
 
-        if self.invar_diffs is None:
-            self.calculate_invariant()
+        for i, z, equ in results:
+            self._z[i] = z
+            self._equiv[i] = equ
 
-        self.permute_index = []
-        for e in sorted(set(self.invar_diffs)):
-            vertices = []
-            for i in range(len(self.invar_diffs)):
-                if self.invar_diffs[i] == e:
-                    vertices.append(i)
-            self.permute_index.append(vertices)
-
-        self.permute_index = self.permute_index[:-1]
-
-    def calculate_permutations(self):
-
-        if self.permute_index is None:
-            self.calculate_permute_index()
-
-        self.permutation_sets = []
-        for index_set in self.permute_index:
-            self.permutation_sets.append(list(multiset_permutations(index_set)))
-        self.dim = [len(x) for x in self.permutation_sets]
-
+    @property
     def info(self):
 
-        if self.invar is None:
-            self.calculate_invariant()
-
-        if self.permute_index is None:
-            self.calculate_permutations()
-
-        if self.orientable is None:
-            self.get_all_Z()
-
         msg = ""
-        msg += print_to_string("graph:", self.graph)
+        msg += print_to_string("graph:", self.G)
         msg += print_to_string("orientable:", self.orientable)
-        msg += print_to_string("permute index:", self.permute_index)
-        msg += print_to_string("number of permutations:", np.prod(self.dim))
+        msg += print_to_string("permute index:", self.permute_indices)
+        msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
         msg += print_to_string("invariant:")
         for j, invar in enumerate(self.invar):
             msg += print_to_string(f"({j + 1}):", invar)
 
         return msg
 
-    def equal(self, graph):
-        if self.invar is None:
-            self.calculate_invariant()
-        if graph.invar is None:
-            graph.calculate_invariant()
-
-        return set(self.invar) == set(graph.invar)
-
-    def _get_all_Z(self, i):
-
-        permutation = []
-        indices = np.unravel_index(i, self.dim)
-        for j in range(len(self.permutation_sets)):
-            permutation += self.permutation_sets[j][indices[j]]
-        sub_graph = Graph(graph_permuation(self.graph, permutation))
-
-        return i, compute_Z(self.graph, sub_graph.graph), self.equal(sub_graph)
-
-    def get_all_Z(self):
-
-        if self.permutation_sets is None:
-            self.calculate_permutations()
-
-        if np.prod(self.dim) > 1000000:
-            return
-
-        self.z = np.zeros(self.dim, dtype=np.int8).flatten()
-        self.equivalent = np.zeros(self.dim, dtype=np.bool).flatten()
-
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(self._get_all_Z, [x for x in range(self.z.size)])
-
-        for result in results:
-            self.z[result[0]] = np.int8(result[1])
-            self.equivalent[result[0]] = np.bool(result[2])
-
-        self.orientable = not np.any(-self.z * self.equivalent)
-
     def release_memory(self):
 
-        self.dim = None
-        # self.orientable = None
-        self.equivalent = None
-        self.z = None
-        self.invar_poly = None
-        self.permutation_sets = None
-        self.permute_index = None
-        self.invar_diffs = None
-        self.invar_coeff = None
-        # self.invar = None
-        self.adj = None
+        self._equiv = None
+        self._z = None
+        self._permutation_sets = None
+        self._permute_indices = None
+        self._invar = None
+        self._invar_poly = None
+        self._adj = None
 
-    def calculate_edge_reduction(self):
-        self.er_sets = []
-        for i in range(self.adj.shape[0]):
-            for j in range(i, self.adj.shape[0]):
-                if self.adj[i][j] == 1:
-                    if all(x < 2 for x in self.adj[i] + self.adj[j]):
-                        tri = np.triu(self.adj, 0)
-                        tri[i] = tri[i] + tri[j]
-                        _adj = np.delete(np.delete(tri, j, 0), j, 1)
-                        _adj = _adj + _adj.transpose()
-                        graphs = []
-                        for ii in range(_adj.shape[0]):
-                            for jj in range(ii, _adj.shape[0]):
-                                if _adj[ii, jj] == 1:
-                                    graphs.append((ii + 1, jj + 1))
-                        self.er_sets.append(graphs)
+    @property
+    def er_sets(self):
+        if self._er_sets is None:
+            self._er_sets = []
+            for i in range(self.adj.shape[0]):
+                for j in range(i, self.adj.shape[0]):
+                    if self.adj[i][j] == 1:
+                        if all(x < 2 for x in self.adj[i] + self.adj[j]):
+                            tri = np.triu(self.adj, 0)
+                            tri[i] = tri[i] + tri[j]
+                            _adj = np.delete(np.delete(tri, j, 0), j, 1)
+                            _adj = _adj + _adj.transpose()
+                            graphs = []
+                            for ii in range(_adj.shape[0]):
+                                for jj in range(ii, _adj.shape[0]):
+                                    if _adj[ii, jj] == 1:
+                                        graphs.append((ii + 1, jj + 1))
+                            self._er_sets.append(graphs)
+        return self._er_sets
 
 
 class OGraph(Graph):
@@ -261,29 +298,20 @@ class OGraph(Graph):
         super(OGraph, self).__init__(graph, threads)
         self.sgraph = None
 
-    def standard(self):
-        if self.sgraph is None:
-            self.calculate_permute_index()
-            self.sgraph = Graph(graph_permuation(src_graph=self.graph, tgt_index=self.permute_index, sort=True),
-                                threads=self.threads)
-
-        return self.sgraph
-
     def infos(self):
         msg = ""
         msg += print_to_string("Original graph info:")
         msg += print_to_string('-' * 30)
-        msg += self.info()
+        msg += self.info
         msg += print_to_string("\nStandard graph info:")
         msg += print_to_string('-' * 30)
-        msg += self.standard().info()
+        msg += abs(self).info
 
         return msg
 
     def release_all_memory(self):
         self.release_memory()
-        if self.sgraph is not None:
-            self.sgraph.release_memory()
+        abs(self).release_memory()
 
 
 class GraphSets:
