@@ -6,6 +6,7 @@ from collections import Iterable
 import multiprocessing as mp
 import io
 import networkx as nx
+import numpy.typing as npt
 
 
 def print_to_string(*args, **kwargs):
@@ -44,7 +45,6 @@ def compute_Z(graph_a, graph_b):
 
     return result
 
-
 class Graph:
     """
          self << f  : f(G)
@@ -52,7 +52,7 @@ class Graph:
          bool(self) : self.orientable
     """
 
-    def __init__(self, graph, threads=1):
+    def __init__(self, graph, threads=1, reduced_edge=None):
 
         self._sG = None
         self._er_sets = None
@@ -64,9 +64,10 @@ class Graph:
         self._invar_poly = None
         self._adj = None
 
+        self.reduced_edge = reduced_edge
+
         self.graph = graph
         self.sort()
-        self.n = max([max(x) for x in self.graph])
         self.threads = threads
 
     def __hash__(self):
@@ -80,6 +81,9 @@ class Graph:
 
     def __abs__(self):
         return self.sG
+
+    def __len__(self):
+        return len(self.G)
 
     def __lshift__(self, f):
 
@@ -114,6 +118,10 @@ class Graph:
         self.graph = sorted(self.graph)
 
     @property
+    def n(self):
+        return max([max(x) for x in self.graph])
+
+    @property
     def sG(self):
         if self._sG is None:
             self._sG = self << self.permute_indices
@@ -133,6 +141,14 @@ class Graph:
 
         return self._adj
 
+    @property
+    def is_valid(self):
+        no_loop = np.trace(self.adj) == 0
+        enough_edges = all(sum(x) > 2 for x in self.adj)
+        is_symmetric = np.equal(self.adj, self.adj.transpose()).all()
+        no_deprecate = set(list(np.unique(self.adj))) == {0, 1}
+
+        return no_loop and enough_edges and is_symmetric and no_deprecate
     @property
     def invar_poly(self):
 
@@ -252,6 +268,8 @@ class Graph:
 
         msg = ""
         msg += print_to_string("graph:", self.G)
+        if self.reduced_edge is not None:
+            msg += print_to_string("reduced edge: ", self.reduced_edge)
         msg += print_to_string("orientable:", self.orientable)
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
@@ -275,20 +293,27 @@ class Graph:
     def er_sets(self):
         if self._er_sets is None:
             self._er_sets = []
-            for i in range(self.adj.shape[0]):
-                for j in range(i, self.adj.shape[0]):
-                    if self.adj[i][j] == 1:
-                        if all(x < 2 for x in self.adj[i] + self.adj[j]):
-                            tri = np.triu(self.adj, 0)
-                            tri[i] = tri[i] + tri[j]
-                            _adj = np.delete(np.delete(tri, j, 0), j, 1)
-                            _adj = _adj + _adj.transpose()
-                            graphs = []
-                            for ii in range(_adj.shape[0]):
-                                for jj in range(ii, _adj.shape[0]):
-                                    if _adj[ii, jj] == 1:
-                                        graphs.append((ii + 1, jj + 1))
-                            self._er_sets.append(graphs)
+            for i in range(len(self)):
+                new_graph = []
+                a, b = self.G[i]
+                for j in range(len(self)):
+                    if j != i:
+                        c, d = self.G[j]
+                        if c == a or c == b:
+                            c = a
+                        if d == a or d == b:
+                            d = a
+
+                        if c > b:
+                            c -= 1
+
+                        if d > b:
+                            d -= 1
+                        new_graph.append((c, d))
+                _graph = Graph(graph=new_graph, threads=self.threads, reduced_edge=(a, b))
+                if _graph.is_valid:
+                    self._er_sets.append(_graph)
+
         return self._er_sets
 
 
@@ -296,8 +321,8 @@ class OGraph(Graph):
 
     def __init__(self, graph, threads=1):
         super(OGraph, self).__init__(graph, threads)
-        self.sgraph = None
 
+    @property
     def infos(self):
         msg = ""
         msg += print_to_string("Original graph info:")
@@ -341,7 +366,7 @@ class GraphSets:
             self.graphs.append(OGraph(graph=graph, threads=threads))
 
     def print_graph_info(self, i):
-        print(self.graphs[i].infos())
+        print(self.graphs[i].infos)
 
     def number_of_graphs(self):
         return len(self.graphs)
