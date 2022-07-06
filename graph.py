@@ -1,4 +1,5 @@
 import numpy as np
+from munch import Munch
 from sympy.matrices import Matrix
 from sympy import symbols, LC, LM, poly
 from sympy.utilities.iterables import multiset_permutations
@@ -6,7 +7,32 @@ from collections import Iterable
 import multiprocessing as mp
 import io
 import networkx as nx
-import numpy.typing as npt
+
+
+def readGraph(n):
+    with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
+        lines = f.readlines()
+
+    lines = list(filter(''.__ne__, [x.strip() for x in lines]))
+
+    start_index = [i for i, s in enumerate(lines) if 'Graph' in s]
+    end_index = [i for i, s in enumerate(lines) if 'Taillenweite' in s]
+
+    _graphs = []
+    for start, end in zip(start_index, end_index):
+        _graphs.append(lines[start + 1:end - 1])
+
+    graphs = []
+    for _graph in _graphs:
+        graph = []
+        for edge in _graph:
+            vertices = edge.replace(' :', '').split(' ')
+            for i in range(1, len(vertices)):
+                if int(vertices[i]) > int(vertices[0]):
+                    graph.append((int(vertices[0]), int(vertices[i])))
+        graphs.append(graph)
+
+    return graphs
 
 
 def print_to_string(*args, **kwargs):
@@ -45,6 +71,7 @@ def compute_Z(graph_a, graph_b):
 
     return result
 
+
 class Graph:
     """
          self << f  : f(G)
@@ -52,7 +79,7 @@ class Graph:
          bool(self) : self.orientable
     """
 
-    def __init__(self, graph, threads=1, reduced_edge=None):
+    def __init__(self, graph, threads=1):
 
         self._sG = None
         self._er_sets = None
@@ -64,7 +91,8 @@ class Graph:
         self._invar_poly = None
         self._adj = None
 
-        self.reduced_edge = reduced_edge
+        self.is_repr = None
+        self.repr = None
 
         self.graph = graph
         self.sort()
@@ -149,6 +177,7 @@ class Graph:
         no_deprecate = set(list(np.unique(self.adj))) == {0, 1}
 
         return no_loop and enough_edges and is_symmetric and no_deprecate
+
     @property
     def invar_poly(self):
 
@@ -268,9 +297,13 @@ class Graph:
 
         msg = ""
         msg += print_to_string("graph:", self.G)
-        if self.reduced_edge is not None:
-            msg += print_to_string("reduced edge: ", self.reduced_edge)
         msg += print_to_string("orientable:", self.orientable)
+        msg += print_to_string("Z(G, sG):", compute_Z(self.graph, abs(self).graph))
+        if self.is_repr is not None:
+            msg += print_to_string("is representative:", self.is_repr)
+            if not self.is_repr and self.repr is not None:
+                msg += print_to_string("rG:", self.repr.graph)
+                msg += print_to_string("Z(G, rG):", compute_Z(self.graph, self.repr.graph))
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
         msg += print_to_string("invariant:")
@@ -279,7 +312,19 @@ class Graph:
 
         return msg
 
-    def release_memory(self):
+    @property
+    def infos(self):
+        msg = ""
+        msg += print_to_string("Original graph info:")
+        msg += print_to_string('-' * 30)
+        msg += self.info
+        msg += print_to_string("\nStandard graph info:")
+        msg += print_to_string('-' * 30)
+        msg += abs(self).info
+
+        return msg
+
+    def _release_memory(self):
 
         self._equiv = None
         self._z = None
@@ -288,6 +333,10 @@ class Graph:
         self._invar = None
         self._invar_poly = None
         self._adj = None
+
+    def release_memory(self):
+        self._release_memory()
+        abs(self)._release_memory()
 
     @property
     def er_sets(self):
@@ -310,63 +359,79 @@ class Graph:
                         if d > b:
                             d -= 1
                         new_graph.append((c, d))
-                _graph = Graph(graph=new_graph, threads=self.threads, reduced_edge=(a, b))
+                _graph = Graph(graph=new_graph, threads=self.threads)
                 if _graph.is_valid:
-                    self._er_sets.append(_graph)
+                    self._er_sets.append(_graph.sG)
+
+            self._er_sets = set(self._er_sets)
 
         return self._er_sets
 
 
-class OGraph(Graph):
+class GraphManager:
 
-    def __init__(self, graph, threads=1):
-        super(OGraph, self).__init__(graph, threads)
+    def __init__(self):
+        self.graphs = []
+        self._repr = None
+
+    def __getitem__(self, item):
+        return self.graphs[item]
+
+    def __len__(self):
+        return len(self.graphs)
+
+    def append(self, item):
+        self.graphs.append(item)
 
     @property
-    def infos(self):
-        msg = ""
-        msg += print_to_string("Original graph info:")
-        msg += print_to_string('-' * 30)
-        msg += self.info
-        msg += print_to_string("\nStandard graph info:")
-        msg += print_to_string('-' * 30)
-        msg += abs(self).info
-
-        return msg
-
-    def release_all_memory(self):
-        self.release_memory()
-        abs(self).release_memory()
+    def repr(self):
+        if self._repr is None:
+            self._repr = []
+            invar_list = []
+            for g in self.graphs:
+                if g.invar not in invar_list:
+                    invar_list.append(g.invar)
+                    self._repr.append(g)
+                    g.is_repr = True
+                else:
+                    g.is_repr = False
+                    for rg in self._repr:
+                        if g.invar == rg.invar:
+                            g.repr = rg
+                            break
+        return self._repr
 
 
 class GraphSets:
 
     def __init__(self, n=3, threads=1):
+        self.graphs = Munch()
 
-        with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
-            lines = f.readlines()
+        self.graphs.A = GraphManager()
+        for graph in readGraph(n):
+            self.graphs.A.append(Graph(graph=graph, threads=threads))
+        _ = self.graphs.A.repr
 
-        lines = list(filter(''.__ne__, [x.strip() for x in lines]))
+    def __getattr__(self, item):
 
-        start_index = [i for i, s in enumerate(lines) if 'Graph' in s]
-        end_index = [i for i, s in enumerate(lines) if 'Taillenweite' in s]
+        if len(item) == 1 and ord('A') <= ord(item) <= ord('Z'):
+            while item not in list(self.graphs.keys()):
+                self.deeper_search()
+            return getattr(self.graphs, item)
+        else:
+            raise AttributeError(f"Attribute {item} not found.")
 
-        _graphs = []
-        for start, end in zip(start_index, end_index):
-            _graphs.append(lines[start + 1:end - 1])
+    def deeper_search(self):
 
-        self.graphs = []
-        for _graph in _graphs:
-            graph = []
-            for edge in _graph:
-                vertices = edge.replace(' :', '').split(' ')
-                for i in range(1, len(vertices)):
-                    if int(vertices[i]) > int(vertices[0]):
-                        graph.append((int(vertices[0]), int(vertices[i])))
-            self.graphs.append(OGraph(graph=graph, threads=threads))
+        last_type = chr(max([ord(x) for x in list(self.graphs.keys())]))
+        next_type = chr(ord(last_type) + 1)
 
-    def print_graph_info(self, i):
-        print(self.graphs[i].infos)
+        _graphs = set()
+        for g in getattr(self.graphs, last_type):
+            _graphs = _graphs.union(abs(g).er_sets)
 
-    def number_of_graphs(self):
-        return len(self.graphs)
+        setattr(self.graphs, next_type, GraphManager())
+        for g in _graphs:
+            getattr(self.graphs, next_type).append(g)
+
+        _ = getattr(self.graphs, next_type).repr
