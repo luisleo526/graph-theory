@@ -263,9 +263,15 @@ class Graph:
     def orientable(self):
         return not np.any(abs(x + 1.0) < 1e-10 and y for x, y in zip(self.z, self.equiv))
 
+    @property
+    def nx_graph(self):
+        nx_graph = nx.from_numpy_matrix(self.adj, create_using=nx.MultiGraph, parallel_edges=False)
+        nx_graph = nx.relabel_nodes(nx_graph, dict(zip([x for x in range(self.n)], [x + 1 for x in range(self.n)])))
+        return nx_graph
+
     def plot(self):
-        graph = nx.from_numpy_matrix(self.adj, create_using=nx.MultiGraph)
-        return nx.draw(graph, with_labels=True, pos=nx.shell_layout(graph))
+        return nx.draw(self.nx_graph, with_labels=True, pos=nx.shell_layout(self.nx_graph),
+                       font_color="whitesmoke", font_size=18, node_size=600)
 
     def _get_z(self, i):
 
@@ -392,12 +398,12 @@ class GraphManager:
                 if g.invar not in invar_list:
                     invar_list.append(g.invar)
                     self._repr.append(g)
-                    g.is_repr = True
+                    g.is_repr = abs(g).is_repr = True
                 else:
-                    g.is_repr = False
+                    g.is_repr = abs(g).is_repr = False
                     for rg in self._repr:
                         if g.invar == rg.invar:
-                            g.repr = rg
+                            g.repr = abs(g).repr = rg
                             break
         return self._repr
 
