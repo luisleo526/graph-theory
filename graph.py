@@ -95,12 +95,12 @@ class Graph:
         self.repr = None
 
         self.graph = graph
-        self.sort()
+        self.order()
         self.threads = threads
 
     def __hash__(self):
         msg = ""
-        for a, b in self.G:
+        for a, b in self.sort:
             msg += f"{a}{b}"
         return hash(msg)
 
@@ -128,7 +128,6 @@ class Graph:
                 tgt_graph.append((c, d))
 
         new_graph = Graph(tgt_graph, self.threads)
-        new_graph.sort()
 
         return new_graph
 
@@ -141,9 +140,9 @@ class Graph:
                 graph.append((a, b))
         self.graph = graph
 
+    @property
     def sort(self):
-        self.order()
-        self.graph = sorted(self.graph)
+        return sorted(self.graph)
 
     @property
     def n(self):
@@ -153,6 +152,7 @@ class Graph:
     def sG(self):
         if self._sG is None:
             self._sG = self << self.permute_indices
+            self._sG.graph = self._sG.sort
         return self._sG
 
     @property
@@ -281,7 +281,7 @@ class Graph:
             permutation += self.permutation_sets[j][indices[j]]
         sub_graph = self << permutation
 
-        return i, compute_Z(self.G, sub_graph.graph), self == sub_graph
+        return i, compute_Z(self.G, sub_graph.graph), self == sub_graph, sub_graph.sort, list(flatten(permutation))
 
     def get_z(self):
 
@@ -294,9 +294,20 @@ class Graph:
         with mp.Pool(processes=self.threads) as pool:
             results = pool.map(self._get_z, [x for x in range(np.prod(self.permutation_dim))])
 
-        for i, z, equ in results:
+        for i, z, equ, _t0, _t1 in results:
             self._z[i] = z
             self._equiv[i] = equ
+
+    def find_repr_z(self):
+
+        with mp.Pool(processes=self.repr.threads) as pool:
+            results = pool.map(self.repr._get_z, [x for x in range(np.prod(self.repr.permutation_dim))])
+
+        ans = []
+        for _t0, z, _t1, g, f in results:
+            if g == self.sort:
+                ans.append({"f": f, "z": z})
+        return ans
 
     @property
     def info(self):
@@ -307,9 +318,13 @@ class Graph:
         msg += print_to_string("Z(G, sG):", compute_Z(self.graph, abs(self).graph))
         if self.is_repr is not None:
             msg += print_to_string("is representative:", self.is_repr)
+            msg += print_to_string("-"*30)
             if not self.is_repr and self.repr is not None:
                 msg += print_to_string("rG:", self.repr.graph)
-                msg += print_to_string("Z(G, rG):", compute_Z(self.graph, self.repr.graph))
+                msg += print_to_string("f, Z(G, rG):")
+                for i, info in enumerate(self.find_repr_z(), 1):
+                    msg += print_to_string(f"({i}): {str(info['f'])}, {info['z']:+.6f}")
+            msg += print_to_string("-" * 30)
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
         msg += print_to_string("invariant:")
