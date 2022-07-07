@@ -79,7 +79,7 @@ class Graph:
          bool(self) : self.orientable
     """
 
-    def __init__(self, graph, threads=1):
+    def __init__(self, graph, threads=1, src_graph=None, reduced_edge=None):
 
         self._sG = None
         self._er_sets = None
@@ -93,6 +93,8 @@ class Graph:
 
         self.is_repr = None
         self.repr = None
+        self.src_graph = src_graph
+        self.reduced_edge = reduced_edge
 
         self.graph = graph
         self.order()
@@ -116,7 +118,7 @@ class Graph:
     def __lshift__(self, f):
 
         tgt_index = list(flatten(f))
-        src_index = [i + 1 for i in range(self.n)]
+        src_index = list(flatten(self.permute_indices))
         mapping = dict(zip(tgt_index, src_index))
 
         tgt_graph = []
@@ -261,7 +263,9 @@ class Graph:
 
     @property
     def orientable(self):
-        return not np.any(abs(x + 1.0) < 1e-10 and y for x, y in zip(self.z, self.equiv))
+        # For any z = -1 and f(G) = G, G is called non-orientable
+        result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
+        return result
 
     @property
     def nx_graph(self):
@@ -285,8 +289,8 @@ class Graph:
 
     def get_z(self):
 
-        if np.prod(self.permutation_dim) > 1000000:
-            return
+        # if np.prod(self.permutation_dim) > 1000000:
+        #     return
 
         self._z = np.zeros(self.permutation_dim, dtype=np.float32).flatten()
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
@@ -318,13 +322,13 @@ class Graph:
         msg += print_to_string("Z(G, sG):", compute_Z(self.graph, abs(self).graph))
         if self.is_repr is not None:
             msg += print_to_string("is representative:", self.is_repr)
-            msg += print_to_string("-"*30)
             if not self.is_repr and self.repr is not None:
+                msg += print_to_string("-" * 30)
                 msg += print_to_string("rG:", self.repr.graph)
                 msg += print_to_string("f, Z(G, rG):")
                 for i, info in enumerate(self.find_repr_z(), 1):
                     msg += print_to_string(f"({i}): {str(info['f'])}, {info['z']:+.6f}")
-            msg += print_to_string("-" * 30)
+                msg += print_to_string("-" * 30)
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
         msg += print_to_string("invariant:")
@@ -380,11 +384,9 @@ class Graph:
                         if d > b:
                             d -= 1
                         new_graph.append((c, d))
-                _graph = Graph(graph=new_graph, threads=self.threads)
+                _graph = Graph(graph=new_graph, threads=self.threads, src_graph=self, reduced_edge=(a, b))
                 if _graph.is_valid:
-                    self._er_sets.append(_graph.sG)
-
-            self._er_sets = set(self._er_sets)
+                    self._er_sets.append(_graph)
 
         return self._er_sets
 
@@ -394,6 +396,8 @@ class GraphManager:
     def __init__(self):
         self.graphs = []
         self._repr = None
+        self.o = []
+        self.no = []
 
     def __getitem__(self, item):
         return self.graphs[item]
@@ -420,6 +424,12 @@ class GraphManager:
                         if g.invar == rg.invar:
                             g.repr = abs(g).repr = rg
                             break
+            for g in self._repr:
+                if abs(g).orientable:
+                    self.o.append(g)
+                else:
+                    self.no.append(g)
+
         return self._repr
 
 
