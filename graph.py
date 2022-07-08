@@ -8,6 +8,7 @@ import multiprocessing as mp
 import io
 import networkx as nx
 from math import isclose
+import matplotlib.pyplot as plt
 
 
 def readGraph(n):
@@ -122,7 +123,6 @@ class Graph:
         self._z_src = None
         self._z_sg = None
         self._z_repr = None
-        self.name = None
         self._sG = None
         self._er_sets = None
         self._equiv = None
@@ -133,6 +133,7 @@ class Graph:
         self._invar_poly = None
         self._adj = None
 
+        self.name = None
         self.is_repr = None
         self.repr = None
         self.src_graph = src_graph
@@ -208,7 +209,7 @@ class Graph:
         if self._adj is None:
             self._adj = np.zeros((self.n, self.n), dtype=np.int8)
             for (i, j) in self.G:
-                self._adj[i - 1, j - 1] = 1
+                self._adj[i - 1, j - 1] += 1
             self._adj += self._adj.transpose()
 
         return self._adj
@@ -433,6 +434,8 @@ class Graph:
 
     def _release_memory(self):
 
+        self._sG = None
+        self._er_sets = None
         self._equiv = None
         self._z = None
         self._permutation_sets = None
@@ -461,10 +464,33 @@ class Graph:
         return self._er_sets
 
 
+class GraphGroup:
+
+    def __init__(self):
+        self.graphs = []
+
+    def __getitem__(self, item):
+        return self.graphs[item]
+
+    def __len__(self):
+        return len(self.graphs)
+
+    def append(self, item):
+        self.graphs.append(item)
+
+    def plot(self):
+        n = len(self.graphs)
+        rows = (n // 3 + min(1, n % 3) + 1)
+        fig = plt.figure(figsize=(15, 5 * rows))
+        for gid, g in enumerate(self.graphs, 1):
+            ax = plt.subplot2grid((rows, 3), (gid // 3 + min(1, gid % 3), (gid - 1) % 3))
+            g.plot()
+
+
 class GraphManager:
 
     def __init__(self, name='A'):
-        self.graphs = []
+        self.graphs = GraphGroup()
         self._repr = None
         self._o = None
         self._no = None
@@ -480,10 +506,13 @@ class GraphManager:
     def append(self, item):
         self.graphs.append(item)
 
+    def plot(self):
+        self.graphs.plot()
+
     @property
     def repr(self):
         if self._repr is None:
-            self._repr = []
+            self._repr = GraphGroup()
             invar_list = []
             for g in self.graphs:
                 if g.invar not in invar_list:
@@ -503,7 +532,7 @@ class GraphManager:
     @property
     def o(self):
         if self._o is None:
-            self._o = []
+            self._o = GraphGroup()
             cnt = 0
             for g in self.repr:
                 if g.orientable:
@@ -515,7 +544,7 @@ class GraphManager:
     @property
     def no(self):
         if self._no is None:
-            self._no = []
+            self._no = GraphGroup()
             cnt = 0
             for g in self.repr:
                 if not g.orientable:
@@ -527,7 +556,7 @@ class GraphManager:
     @property
     def cand(self):
         if self._cand is None:
-            self._cand = []
+            self._cand = GraphGroup()
             for g in [g for g in self.graphs if g not in self.repr]:
                 self._cand.append(g)
         return self._cand
