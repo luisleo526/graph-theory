@@ -7,6 +7,7 @@ from collections import Iterable
 import multiprocessing as mp
 import io
 import networkx as nx
+from math import isclose
 
 
 def readGraph(n):
@@ -52,22 +53,59 @@ def flatten(lis):
             yield item
 
 
-def compute_Y(edge_a1, edge_a2, edge_b1, edge_b2):
-    a, b = edge_a1
-    c, d = edge_a2
-    fa, fb = edge_b1
-    fc, fd = edge_b2
+def compute_X(edge):
+    a, b = edge
+    if a != b:
+        return 100 * a + b
+    else:
+        return 0
 
-    return ((100 * fa + fb) - (100 * fc + fd)) / ((100 * a + b) - (100 * c + d))
+
+def compute_Y(src1, src2, tgt1, tgt2):
+    result = (compute_X(tgt1) - compute_X(tgt2)) / (compute_X(src1) - compute_X(src2))
+    return result
 
 
-def compute_Z(graph_a, graph_b):
-    num_edges = len(graph_a)
+def compute_Z(src, tgt):
+    assert len(src) == len(tgt)
+    num_edges = len(src)
     result = 1
     for i in range(num_edges):
         for j in range(i + 1, num_edges):
-            if i != j:
-                result *= compute_Y(graph_a[i], graph_a[j], graph_b[i], graph_b[j])
+            result *= compute_Y(src[i], src[j], tgt[i], tgt[j])
+
+    if isclose(result, int(result)):
+        result = int(result)
+
+    return result
+
+
+def h(edge, redge):
+    c, d = edge
+    a, b = redge
+    if c == a or c == b:
+        c = a
+    if d == a or d == b:
+        d = a
+
+    if c > b:
+        c -= 1
+
+    if d > b:
+        d -= 1
+
+    return c, d
+
+
+def compute_Zr(graph, edge):
+    num_edge = len(graph)
+    result = 1
+    for i in range(num_edge):
+        for j in range(i + 1, num_edge):
+            result *= compute_Y(graph[i], graph[j], h(graph[i], edge), h(graph[j], edge))
+
+    if isclose(result, int(result)):
+        result = int(result)
 
     return result
 
@@ -81,6 +119,10 @@ class Graph:
 
     def __init__(self, graph, threads=1, src_graph=None, reduced_edge=None):
 
+        self._z_src = None
+        self._z_sg = None
+        self._z_repr = None
+        self.name = None
         self._sG = None
         self._er_sets = None
         self._equiv = None
@@ -119,7 +161,7 @@ class Graph:
 
         tgt_index = list(flatten(f))
         src_index = list(flatten(self.permute_indices))
-        mapping = dict(zip(tgt_index, src_index))
+        mapping = dict(zip(src_index, tgt_index))
 
         tgt_graph = []
         for a, b in self.graph:
@@ -153,7 +195,7 @@ class Graph:
     @property
     def sG(self):
         if self._sG is None:
-            self._sG = self << self.permute_indices
+            self._sG = self << [x for x in range(1, self.n + 1)]
             self._sG.graph = self._sG.sort
         return self._sG
 
@@ -256,6 +298,27 @@ class Graph:
         return self._z
 
     @property
+    def z_src(self):
+        if self._z_src is None:
+            self._z_src = compute_Zr(self.src_graph.G, self.reduced_edge)
+
+        return self._z_src
+
+    @property
+    def z_repr(self):
+
+        if self._z_repr is None:
+            self._z_repr = self.find_repr_z()
+        return self._z_repr
+
+    @property
+    def z_sg(self):
+
+        if self._z_sg is None:
+            self._z_sg = compute_Z(self.graph, abs(self).graph)
+        return self._z_sg
+
+    @property
     def equiv(self):
         if self._equiv is None:
             self.get_z()
@@ -304,14 +367,24 @@ class Graph:
 
     def find_repr_z(self):
 
-        with mp.Pool(processes=self.repr.threads) as pool:
-            results = pool.map(self.repr._get_z, [x for x in range(np.prod(self.repr.permutation_dim))])
+        with mp.Pool(processes=abs(self.repr).threads) as pool:
+            results = pool.map(abs(self.repr)._get_z, [x for x in range(np.prod(abs(self.repr).permutation_dim))])
 
         ans = []
         for _t0, z, _t1, g, f in results:
-            if g == self.sort:
+            if g == abs(self).sort:
                 ans.append({"f": f, "z": z})
-        return ans
+
+        zs = [x["z"] for x in ans]
+        if len(ans) > 1:
+            assert sum([abs(x) - abs(zs[0]) for x in zs]) < 1e-10
+            if abs(max(zs) - min(zs)) > 1e-10:
+                pm = u"\u00B11"
+                return f"{pm}{max(zs)}"
+            else:
+                return zs[0]
+        else:
+            return zs[0]
 
     @property
     def info(self):
@@ -319,16 +392,15 @@ class Graph:
         msg = ""
         msg += print_to_string("graph:", self.G)
         msg += print_to_string("orientable:", self.orientable)
-        msg += print_to_string("Z(G, sG):", compute_Z(self.graph, abs(self).graph))
+        msg += print_to_string("Z(G, sG):", self.z_sg)
         if self.is_repr is not None:
-            msg += print_to_string("is representative:", self.is_repr)
-            if not self.is_repr and self.repr is not None:
-                msg += print_to_string("-" * 30)
+            if self.is_repr:
+                msg += print_to_string("is representative:", self.is_repr, self.name)
+            else:
+                msg += print_to_string("is representative:", self.is_repr)
+            if not self.is_repr:
                 msg += print_to_string("rG:", self.repr.graph)
-                msg += print_to_string("f, Z(G, rG):")
-                for i, info in enumerate(self.find_repr_z(), 1):
-                    msg += print_to_string(f"({i}): {str(info['f'])}, {info['z']:+.6f}")
-                msg += print_to_string("-" * 30)
+                msg += print_to_string("Z(G, rG):", self.z_repr)
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
         msg += print_to_string("invariant:")
@@ -347,6 +419,16 @@ class Graph:
         msg += print_to_string('-' * 30)
         msg += abs(self).info
 
+        return msg
+
+    @property
+    def data(self):
+        msg = ""
+        if self.reduced_edge is not None:
+            e = self.src_graph.G.index(self.reduced_edge) + 1
+            msg += print_to_string(f"Z({self.src_graph.name}, {e}):", self.z_src)
+        msg += print_to_string(f"Z(G, S):", self.z_sg)
+        msg += print_to_string(f"Z(G, {self.repr.name}):", self.z_repr)
         return msg
 
     def _release_memory(self):
@@ -369,22 +451,10 @@ class Graph:
             self._er_sets = []
             for i in range(len(self)):
                 new_graph = []
-                a, b = self.G[i]
                 for j in range(len(self)):
                     if j != i:
-                        c, d = self.G[j]
-                        if c == a or c == b:
-                            c = a
-                        if d == a or d == b:
-                            d = a
-
-                        if c > b:
-                            c -= 1
-
-                        if d > b:
-                            d -= 1
-                        new_graph.append((c, d))
-                _graph = Graph(graph=new_graph, threads=self.threads, src_graph=self, reduced_edge=(a, b))
+                        new_graph.append(h(self.G[j], self.G[i]))
+                _graph = Graph(graph=new_graph, threads=self.threads, src_graph=self, reduced_edge=self.G[i])
                 if _graph.is_valid:
                     self._er_sets.append(_graph)
 
@@ -393,11 +463,13 @@ class Graph:
 
 class GraphManager:
 
-    def __init__(self):
+    def __init__(self, name='A'):
         self.graphs = []
         self._repr = None
-        self.o = []
-        self.no = []
+        self._o = None
+        self._no = None
+        self.name = name
+        self._cand = None
 
     def __getitem__(self, item):
         return self.graphs[item]
@@ -418,19 +490,51 @@ class GraphManager:
                     invar_list.append(g.invar)
                     self._repr.append(g)
                     g.is_repr = abs(g).is_repr = True
+                    g.repr = g
                 else:
                     g.is_repr = abs(g).is_repr = False
                     for rg in self._repr:
                         if g.invar == rg.invar:
                             g.repr = abs(g).repr = rg
                             break
-            for g in self._repr:
-                if abs(g).orientable:
-                    self.o.append(g)
-                else:
-                    self.no.append(g)
 
         return self._repr
+
+    @property
+    def o(self):
+        if self._o is None:
+            self._o = []
+            cnt = 0
+            for g in self.repr:
+                if g.orientable:
+                    cnt += 1
+                    g.name = abs(g).name = f"{self.name}{cnt}"
+                    self._o.append(g)
+        return self._o
+
+    @property
+    def no(self):
+        if self._no is None:
+            self._no = []
+            cnt = 0
+            for g in self.repr:
+                if not g.orientable:
+                    cnt += 1
+                    g.name = abs(g).name = f"{self.name}N{cnt}"
+                    self._no.append(g)
+        return self._no
+
+    @property
+    def cand(self):
+        if self._cand is None:
+            self._cand = []
+            for g in [g for g in self.graphs if g not in self.repr]:
+                self._cand.append(g)
+        return self._cand
+
+    def group(self):
+        _ = self.o
+        _ = self.no
 
 
 class GraphSets:
@@ -441,7 +545,7 @@ class GraphSets:
         self.graphs.A = GraphManager()
         for graph in readGraph(n):
             self.graphs.A.append(Graph(graph=graph, threads=threads))
-        _ = self.graphs.A.repr
+        self.graphs.A.group()
 
     def __getattr__(self, item):
 
@@ -461,8 +565,8 @@ class GraphSets:
         for g in getattr(self.graphs, last_type):
             _graphs = _graphs.union(abs(g).er_sets)
 
-        setattr(self.graphs, next_type, GraphManager())
+        setattr(self.graphs, next_type, GraphManager(name=next_type))
         for g in _graphs:
             getattr(self.graphs, next_type).append(g)
 
-        _ = getattr(self.graphs, next_type).repr
+        getattr(self.graphs, next_type).group()
