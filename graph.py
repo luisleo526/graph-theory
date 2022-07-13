@@ -526,9 +526,9 @@ class GraphManager:
             for g in sorted(self.graphs):
                 if g.invar not in invar_list:
                     invar_list.append(g.invar)
-                    self._repr.append(abs(g))
                     g.is_repr = abs(g).is_repr = True
                     abs(g).repr = abs(g)
+                    self._repr.append(abs(g))
                 else:
                     g.is_repr = abs(g).is_repr = False
                     for rg in self._repr:
