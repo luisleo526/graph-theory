@@ -210,6 +210,8 @@ class Graph:
     def sG(self):
         if self._sG is None:
             self._sG = self << [x for x in range(1, self.n + 1)]
+            self._sG.src_graph = self.src_graph
+            self._sG.reduced_edge = self.reduced_edge
         return self._sG
 
     @property
@@ -382,7 +384,7 @@ class Graph:
 
     def find_repr_z(self):
 
-        repr_graph = abs(self.repr)
+        repr_graph = self.repr
 
         with mp.Pool(processes=repr_graph.threads) as pool:
             results = pool.map(repr_graph._get_z, [x for x in range(np.prod(repr_graph.permutation_dim))])
@@ -524,16 +526,16 @@ class GraphManager:
             for g in sorted(self.graphs):
                 if g.invar not in invar_list:
                     invar_list.append(g.invar)
-                    self._repr.append(g)
+                    self._repr.append(abs(g))
                     g.is_repr = abs(g).is_repr = True
-                    g.repr = g
+                    abs(g).repr = abs(g)
                 else:
                     g.is_repr = abs(g).is_repr = False
                     for rg in self._repr:
                         if g.invar == rg.invar:
                             g.repr = abs(g).repr = rg
                             break
-        return sorted(self._repr)
+        return self._repr
 
     @property
     def o(self):
@@ -543,7 +545,7 @@ class GraphManager:
             for g in self.repr:
                 if g.orientable:
                     cnt += 1
-                    g.name = abs(g).name = f"{self.name}{cnt}"
+                    g.name = f"{self.name}{cnt}"
                     self._o.append(g)
         return self._o
 
@@ -555,7 +557,7 @@ class GraphManager:
             for g in self.repr:
                 if not g.orientable:
                     cnt += 1
-                    g.name = abs(g).name = f"{self.name}N{cnt}"
+                    g.name = f"{self.name}N{cnt}"
                     self._no.append(g)
         return self._no
 
@@ -563,7 +565,7 @@ class GraphManager:
     def cand(self):
         if self._cand is None:
             self._cand = GraphGroup()
-            for g in sorted([g for g in self.graphs if g not in self.repr]):
+            for g in sorted([g for g in self.graphs if not g.is_repr]):
                 self._cand.append(g)
         return self._cand
 
@@ -597,8 +599,8 @@ class GraphSets:
         next_type = chr(ord(last_type) + 1)
 
         _graphs = set()
-        for g in getattr(self.graphs, last_type):
-            _graphs = _graphs.union(abs(g).er_sets)
+        for g in getattr(getattr(self.graphs, last_type), "repr"):
+            _graphs = _graphs.union(g.er_sets)
 
         setattr(self.graphs, next_type, GraphManager(name=next_type))
         for g in _graphs:

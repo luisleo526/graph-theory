@@ -1,6 +1,9 @@
 import argparse
 from graph import GraphSets
-
+import pandas as pd
+import numpy as np
+import math
+import functools
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -8,11 +11,40 @@ if __name__ == '__main__':
     parser.add_argument("-t", default=8, type=int)
     args = parser.parse_args()
 
-    g = GraphSets(n=args.n, threads=args.t)
+    t = GraphSets(n=args.n, threads=args.t)
 
-    with open(f"{args.n}-results.txt", 'w') as f:
-        for i, graph in enumerate(g.graphs):
-            f.write(f"A({args.n*2}, {i+1})\n")
-            f.write(graph.infos())
-            f.write("="*30+"\n\n")
-            graph.release_all_memory()
+    columns = []
+    for i in range(len(t.A.o)):
+        for j in range(len(t.A.o[i].G)):
+            columns.append(f"A({i + 1},{j + 1})")
+    for i in range(len(t.A.no)):
+        for j in range(len(t.A.no[i].G)):
+            columns.append(f"AN({i + 1},{j + 1})")
+
+    rows = []
+    for i in range(len(t.B.o)):
+        rows.append(f"B{i + 1}")
+    for i in range(len(t.B.no)):
+        rows.append(f"BN{i + 1}")
+
+    data = np.empty((len(rows), len(columns)), dtype=object)
+    sign = functools.partial(math.copysign, 1)
+    for g in t.B.cand:
+        if 'N' in g.src_graph.name:
+            i = (len(t.A.o) + int(g.src_graph.name[2:]) - 1) * len(g.src_graph.G) + g.src_graph.G.index(
+                g.reduced_edge) + 1
+        else:
+            i = (int(g.src_graph.name[1:]) - 1) * len(g.src_graph.G) + g.src_graph.G.index(g.reduced_edge) + 1
+
+        if 'N' in g.repr.name:
+            j = len(t.B.o) + int(g.repr.name[2:])
+        else:
+            j = int(g.repr.name[1:])
+
+        if type(g.z_repr) == str:
+            data[j - 1, i - 1] = "?"
+        else:
+            data[j - 1, i - 1] = str(sign(g.z_repr) * sign(g.z_sg) * sign(g.z_src))
+
+    pd.DataFrame(data=data, index=rows, columns=columns).to_excel(f"n={args.n}.xlsx")
+
