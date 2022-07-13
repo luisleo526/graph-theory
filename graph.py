@@ -54,10 +54,10 @@ def flatten(lis):
             yield item
 
 
-def compute_X(edge):
+def compute_X(edge, base=1000):
     a, b = edge
     if a != b:
-        return 100 * a + b
+        return base * a + b
     else:
         return 0
 
@@ -75,8 +75,8 @@ def compute_Z(src, tgt):
         for j in range(i + 1, num_edges):
             result *= compute_Y(src[i], src[j], tgt[i], tgt[j])
 
-    if isclose(result, int(result)):
-        result = int(result)
+    # if isclose(result, int(result)):
+    #     result = int(result)
 
     return result
 
@@ -84,6 +84,9 @@ def compute_Z(src, tgt):
 def h(edge, redge):
     c, d = edge
     a, b = redge
+
+    assert b > a and d > c
+
     if c == a or c == b:
         c = a
     if d == a or d == b:
@@ -99,14 +102,15 @@ def h(edge, redge):
 
 
 def compute_Zr(graph, edge):
+    assert edge in graph
     num_edge = len(graph)
     result = 1
     for i in range(num_edge):
         for j in range(i + 1, num_edge):
             result *= compute_Y(graph[i], graph[j], h(graph[i], edge), h(graph[j], edge))
 
-    if isclose(result, int(result)):
-        result = int(result)
+    # if isclose(result, int(result)):
+    #     result = int(result)
 
     return result
 
@@ -311,7 +315,7 @@ class Graph:
     @property
     def z_src(self):
         if self._z_src is None:
-            self._z_src = compute_Zr(self.src_graph.G, self.reduced_edge)
+            self._z_src = compute_Zr(self.src_graph.sort, self.reduced_edge)
 
         return self._z_src
 
@@ -332,7 +336,7 @@ class Graph:
     def z_sg(self):
 
         if self._z_sg is None:
-            self._z_sg = compute_Z(self.graph, abs(self).graph)
+            self._z_sg = compute_Z(self.sort, abs(self).sort)
         return self._z_sg
 
     @property
@@ -435,7 +439,7 @@ class Graph:
     def data(self):
         msg = ""
         if self.reduced_edge is not None:
-            e = self.src_graph.G.index(self.reduced_edge) + 1
+            e = self.src_graph.sort.index(self.reduced_edge) + 1
             msg += print_to_string(f"Z({self.src_graph.name}, {e}):", self.z_src)
         msg += print_to_string(f"Z(   G , S):", self.z_sg)
         msg += print_to_string(f"Z( S(G), {self.repr.name}):", self.z_repr)
@@ -465,8 +469,8 @@ class Graph:
                 new_graph = []
                 for j in range(len(self)):
                     if j != i:
-                        new_graph.append(h(self.G[j], self.G[i]))
-                _graph = Graph(graph=new_graph, threads=self.threads, src_graph=self, reduced_edge=self.G[i])
+                        new_graph.append(h(self.sort[j], self.sort[i]))
+                _graph = Graph(graph=new_graph, threads=self.threads, src_graph=self, reduced_edge=self.sort[i])
                 if _graph.is_valid:
                     self._er_sets.append(_graph)
 
