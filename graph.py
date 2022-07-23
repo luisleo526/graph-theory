@@ -54,8 +54,9 @@ def flatten(lis):
             yield item
 
 
-def compute_X(edge, base=1000):
+def compute_X(edge, base=100):
     a, b = edge
+    assert a <= b
     if a != b:
         return base * a + b
     else:
@@ -63,8 +64,10 @@ def compute_X(edge, base=1000):
 
 
 def compute_Y(src1, src2, tgt1, tgt2):
-    result = (compute_X(tgt1) - compute_X(tgt2)) / (compute_X(src1) - compute_X(src2))
-    return result
+    y1 = (compute_X(tgt1) - compute_X(tgt2))
+    y2 = (compute_X(src1) - compute_X(src2))
+
+    return y1 / y2
 
 
 def compute_Z(src, tgt):
@@ -87,18 +90,21 @@ def h(edge, redge):
 
     assert b > a and d > c
 
-    if c == a or c == b:
+    if c == b:
         c = a
-    if d == a or d == b:
+    elif c > b:
+        c = c-1
+
+    if d == b:
         d = a
+    elif d > b:
+        d = d-1
 
-    if c > b:
-        c -= 1
+    if c > d:
+        return d, c
+    else:
+        return c, d
 
-    if d > b:
-        d -= 1
-
-    return c, d
 
 
 def compute_Zr(graph, edge):
@@ -334,9 +340,8 @@ class Graph:
 
     @property
     def z_sg(self):
-
         if self._z_sg is None:
-            self._z_sg = compute_Z(self.sort, abs(self).sort)
+            self._z_sg = compute_Z(self.G, abs(self).G)
         return self._z_sg
 
     @property
@@ -404,7 +409,7 @@ class Graph:
         if len(ans) > 1:
             assert sum([abs(x) - abs(zs[0]) for x in zs]) < 1e-10
             if abs(max(zs) - min(zs)) > 1e-10:
-                pm = u"\u00B11"
+                pm = u"\u00B1"
                 return f"{pm}{max(zs)}"
             else:
                 return zs[0]
@@ -415,7 +420,7 @@ class Graph:
     def info(self):
 
         msg = ""
-        msg += print_to_string("graph:", self.G)
+        msg += print_to_string("graph:", self.sort)
         msg += print_to_string("orientable:", self.orientable)
         msg += print_to_string("permute index:", self.permute_indices)
         msg += print_to_string("number of permutations:", np.prod(self.permutation_dim))
@@ -440,9 +445,9 @@ class Graph:
         msg = ""
         if self.reduced_edge is not None:
             e = self.src_graph.sort.index(self.reduced_edge) + 1
-            msg += print_to_string(f"Z({self.src_graph.name}, {e}):", self.z_src)
-        msg += print_to_string(f"Z(   G , S):", self.z_sg)
-        msg += print_to_string(f"Z( S(G), {self.repr.name}):", self.z_repr)
+            msg += print_to_string(f"Z({self.src_graph.name:>5s}, {e:2d}):", self.z_src)
+        msg += print_to_string(f"Z(   G , S ):", self.z_sg)
+        msg += print_to_string(f"Z( S(G),{self.repr.name:>3s}):", self.z_repr)
         return msg
 
     def _release_memory(self):
@@ -531,7 +536,7 @@ class GraphManager:
                 if g.invar not in invar_list:
                     invar_list.append(g.invar)
                     g.is_repr = abs(g).is_repr = True
-                    abs(g).repr = abs(g)
+                    g.repr = abs(g).repr = abs(g)
                     self._repr.append(abs(g))
                 else:
                     g.is_repr = abs(g).is_repr = False
@@ -602,9 +607,9 @@ class GraphSets:
         last_type = chr(max([ord(x) for x in list(self.graphs.keys())]))
         next_type = chr(ord(last_type) + 1)
 
-        _graphs = set()
+        _graphs = []
         for g in getattr(getattr(self.graphs, last_type), "repr"):
-            _graphs = _graphs.union(g.er_sets)
+            _graphs += g.er_sets
 
         setattr(self.graphs, next_type, GraphManager(name=next_type))
         for g in _graphs:

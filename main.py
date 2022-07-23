@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import math
 import functools
-
+import copy
 
 def to_excel(t):
     columns = []
@@ -27,10 +27,10 @@ def to_excel(t):
             for k in range(len(t.A[0].G)):
                 tmp.append(0)
             data[i, j] = tmp
-            data2[i, j] = tmp
+            data2[i, j] = copy.copy(tmp)
 
     sign = functools.partial(math.copysign, 1)
-    for g in t.B.cand:
+    for g in t.B:
         if 'N' in g.src_graph.name:
             i = len(t.A.o) + int(g.src_graph.name[2:])
         else:
@@ -44,21 +44,22 @@ def to_excel(t):
             j = int(g.repr.name[1:])
 
         if type(g.z_repr) == str:
-            data[j - 1, i - 1][k] = [u"\u00B11", sign(g.z_sg), sign(g.z_src)]
-            data2[j - 1, i - 1][k] = "#"
+            data[j - 1, i - 1][k] = [u"\u00B11", int(sign(g.z_sg)), int(sign(g.z_src))]
+            data2[j - 1, i - 1][k] = 0
         else:
-            data[j - 1, i - 1][k] = [sign(g.z_repr), sign(g.z_sg), sign(g.z_src)]
-            data2[j - 1, i - 1][k] = sign(g.z_repr) * sign(g.z_sg) * sign(g.z_src)
+            data[j - 1, i - 1][k] = [int(sign(g.z_repr)), int(sign(g.z_sg)), int(sign(g.z_src))]
+            data2[j - 1, i - 1][k] = int(sign(g.z_repr) * sign(g.z_sg) * sign(g.z_src))
 
-    writer = pd.ExcelWriter(f"n={args.n}.xlsx", engine='xlsxwriter')
-
-    pd.DataFrame(data=data, index=rows, columns=columns).to_excel(excel_writer=writer, sheet_name="ALL")
-    pd.DataFrame(data=data2, index=rows, columns=columns).to_excel(excel_writer=writer, sheet_name="ALL-to-One")
+    df1 = pd.DataFrame(data=data, index=rows, columns=columns)
+    df2 = pd.DataFrame(data=data2, index=rows, columns=columns)
+    with pd.ExcelWriter(f"n={args.n}.xlsx") as writer:
+        df1.to_excel(writer, sheet_name="ALL")
+        df2.to_excel(writer, sheet_name="ALL-to-One")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", default=2, type=int)
+    parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
     args = parser.parse_args()
 
