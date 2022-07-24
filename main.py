@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import math
 import functools
-
+import time
 
 def get_dataframe(t, src, tgt):
     columns = []
@@ -104,6 +104,8 @@ if __name__ == '__main__':
     parser.add_argument("-t", default=8, type=int)
     args = parser.parse_args()
 
+    cpu_time = -time.time()
+
     t = GraphSets(n=args.n, threads=args.t)
 
     with pd.ExcelWriter(f"n={args.n}-details.xlsx") as writer:
@@ -119,7 +121,7 @@ if __name__ == '__main__':
             if len(getattr(t, chr(65 + i + 2))) == 0:
                 break
 
-    with open("graphs.txt", "w") as f:
+    with open(f"n={args.n}-graphs.txt", "w") as f:
         for i in range(26):
             if len(getattr(t, chr(65+i))) > 0:
                 for g in getattr(t, chr(65+i)).o:
@@ -128,3 +130,5 @@ if __name__ == '__main__':
                     f.write(f"{g.name}: {g.sort}\n")
             else:
                 break
+
+    print("CPU time:", time.time()+cpu_time)
