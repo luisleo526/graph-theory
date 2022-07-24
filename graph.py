@@ -93,18 +93,17 @@ def h(edge, redge):
     if c == b:
         c = a
     elif c > b:
-        c = c-1
+        c = c - 1
 
     if d == b:
         d = a
     elif d > b:
-        d = d-1
+        d = d - 1
 
     if c > d:
         return d, c
     else:
         return c, d
-
 
 
 def compute_Zr(graph, edge):
@@ -385,8 +384,8 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(self._get_z, range(np.prod(self.permutation_dim)),
-                               chunksize=int(np.prod(self.permutation_dim)/self.threads))
+            results = pool.imap_unordered(self._get_z, range(np.prod(self.permutation_dim)),
+                                          chunksize=int(np.prod(self.permutation_dim) / self.threads))
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -397,8 +396,8 @@ class Graph:
         repr_graph = self.repr
 
         with mp.Pool(processes=repr_graph.threads) as pool:
-            results = pool.map(repr_graph._get_z, range(np.prod(repr_graph.permutation_dim)),
-                               chunksize=int(np.prod(repr_graph.permutation_dim)/self.threads))
+            results = pool.imap_unordered(repr_graph._get_z, range(np.prod(repr_graph.permutation_dim)),
+                                          chunksize=int(np.prod(repr_graph.permutation_dim) / self.threads))
 
         ans = []
         for i, z, g, f in results:
