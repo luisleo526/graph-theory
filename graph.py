@@ -10,7 +10,7 @@ import networkx as nx
 from math import isclose
 import matplotlib.pyplot as plt
 
-chunksize = 10
+chunksize = 50000
 
 
 def readGraph(n):
@@ -386,9 +386,16 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         n = np.prod(self.permutation_dim)
+        threads = min(self.threads, int(n/chunksize))
+        _chunksize = chunksize
 
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(self._get_z, range(n), chunksize=chunksize)
+        if n < chunksize:
+            threads=1             
+        elif n > chunksize * self.threads:    
+            _chunksize = int(n / self.threads) - 1
+
+        with mp.Pool(processes=threads) as pool:
+            results = pool.map(self._get_z, range(n), chunksize=_chunksize)
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -399,9 +406,16 @@ class Graph:
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
+        threads = min(self.threads, int(n/chunksize))
+        _chunksize = chunksize
 
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(repr_graph._get_z, range(n), chunksize=chunksize)
+        if n < chunksize:
+            threads=1
+        elif n > chunksize * self.threads:
+            _chunksize = int(n / self.threads) - 1
+
+        with mp.Pool(processes=threads) as pool:
+            results = pool.map(repr_graph._get_z, range(n), chunksize=_chunksize)
 
         ans = []
         for i, z, g, f in results:
