@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 
 chunksize = 1000
 
+
 def z_task(f, n, threads):
-    with mp.Pool(processes=threads) as pool:
+    with mp.Pool(processes=max(1, threads)) as pool:
         results = pool.map(f, range(n), chunksize=chunksize)
     return results
+
 
 def readGraph(n):
     with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
@@ -390,7 +392,7 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         n = np.prod(self.permutation_dim)
-        results = z_task(self._get_z, n, min(self.threads, int(n/chunksize)))
+        results = z_task(self._get_z, n, min(self.threads, int(n / chunksize)))
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -401,7 +403,7 @@ class Graph:
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
-        results = z_task(repr_graph._get_z, n, min(self.threads, int(n/chunksize)))
+        results = z_task(repr_graph._get_z, n, min(self.threads, int(n / chunksize)))
 
         ans = []
         for i, z, g, f in results:
