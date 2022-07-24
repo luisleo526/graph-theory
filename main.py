@@ -5,6 +5,8 @@ import numpy as np
 import math
 import functools
 import time
+from sympy.matrices import Matrix
+import multiprocessing as mp
 
 def get_dataframe(t, src, tgt):
     columns = []
@@ -95,10 +97,11 @@ def get_matrix(t, src, tgt):
         else:
             data[j - 1, i - 1] += int(sign(g.z_src)) * int(sign(g.z_sg)) * int(sign(g.z_repr))
 
-    return pd.DataFrame(data=data, index=rows, columns=columns)
+    return pd.DataFrame(data=data, index=rows, columns=columns), data[:len(getattr(t, tgt).o), :len(getattr(t, src).o)]
 
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn')
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
@@ -115,9 +118,12 @@ if __name__ == '__main__':
             if len(getattr(t, chr(65 + i + 2))) == 0:
                 break
 
+    matrices = {}
     with pd.ExcelWriter(f"n={args.n}-matrix.xlsx") as writer:
         for i in range(26):
-            get_matrix(t, chr(65 + i), chr(65 + i + 1)).to_excel(writer, sheet_name=f"{chr(65 + i)}-{chr(65 + i + 1)}")
+            df,  matrix = get_matrix(t, chr(65 + i), chr(65 + i + 1))
+            matrices[f"{chr(65 + i)}{chr(65 + i+1)}"] = matrix
+            df.to_excel(writer, sheet_name=f"{chr(65 + i)}-{chr(65 + i + 1)}")
             if len(getattr(t, chr(65 + i + 2))) == 0:
                 break
 
@@ -130,5 +136,12 @@ if __name__ == '__main__':
                     f.write(f"{g.name}: {g.sort}\n")
             else:
                 break
+
+    with open(f"n={args.n}-matrices_ranks.txt", "w") as f:
+        for t in matrices:
+            if matrices[t].size > 0:
+                f.write(f"{t}: {Matrix(matrices[t]).rank()}\n")
+            else:
+                f.write(f"{t}: 0\n")
 
     print("CPU time:", time.time()+cpu_time)
