@@ -387,7 +387,7 @@ class Graph:
         n = np.prod(self.permutation_dim)
         threads = min(n // chunksize + 1, self.threads)
 
-        with mp.Pool(processes=threads) as pool:
+        with mp.Pool(processes=self.threads) as pool:
             results = pool.map(self._get_z, range(n), chunksize=chunksize)
 
         for i, z, g, f in results:
@@ -401,7 +401,7 @@ class Graph:
         n = np.prod(repr_graph.permutation_dim)
         threads = min(n // chunksize + 1, self.threads)
 
-        with mp.Pool(processes=threads) as pool:
+        with mp.Pool(processes=self.threads) as pool:
             results = pool.map(repr_graph._get_z, range(n), chunksize=chunksize)
 
         ans = []
