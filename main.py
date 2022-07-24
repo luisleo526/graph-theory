@@ -4,57 +4,60 @@ import pandas as pd
 import numpy as np
 import math
 import functools
-import copy
 
-def to_excel(t):
+
+def get_dataframe(t, src, tgt):
     columns = []
-    for i in range(len(t.A.o)):
-        columns.append(f"A{i + 1}")
-    for i in range(len(t.A.no)):
-        columns.append(f"AN{i + 1}")
+    for i in range(len(getattr(t, src).o)):
+        columns.append(f"{src}{i + 1}")
+    for i in range(len(getattr(t, src).no)):
+        columns.append(f"{src}N{i + 1}")
 
     rows = []
-    for i in range(len(t.B.o)):
-        rows.append(f"B{i + 1}")
-    for i in range(len(t.B.no)):
-        rows.append(f"BN{i + 1}")
+    for i in range(len(getattr(t, tgt).o)):
+        rows.append(f"{tgt}{i + 1}")
+    for i in range(len(getattr(t, tgt).no)):
+        rows.append(f"{tgt}N{i + 1}")
+    rows.append("X")
 
     data = np.empty((len(rows), len(columns)), dtype=object)
-    data2 = np.empty((len(rows), len(columns)), dtype=object)
     for i in range(len(rows)):
         for j in range(len(columns)):
-            tmp = []
-            for k in range(len(t.A[0].G)):
-                tmp.append(0)
-            data[i, j] = tmp
-            data2[i, j] = copy.copy(tmp)
+            data[i, j] = ""
+
+    edges = np.empty(len(columns), dtype=object)
+    for i in range(len(columns)):
+        edges[i] = []
+        for j in range(len(getattr(t, src)[0].G)):
+            edges[i].append(0)
 
     sign = functools.partial(math.copysign, 1)
-    for g in t.B:
+    for g in getattr(t, tgt):
         if 'N' in g.src_graph.name:
-            i = len(t.A.o) + int(g.src_graph.name[2:])
+            i = len(getattr(t, src).o) + int(g.src_graph.name[2:])
         else:
             i = int(g.src_graph.name[1:])
 
-        k = g.src_graph.G.index(g.reduced_edge)
+        k = g.src_graph.sort.index(g.reduced_edge) + 1
 
         if 'N' in g.repr.name:
-            j = len(t.B.o) + int(g.repr.name[2:])
+            j = len(getattr(t, tgt).o) + int(g.repr.name[2:])
         else:
             j = int(g.repr.name[1:])
 
-        if type(g.z_repr) == str:
-            data[j - 1, i - 1][k] = [u"\u00B11", int(sign(g.z_sg)), int(sign(g.z_src))]
-            data2[j - 1, i - 1][k] = 0
-        else:
-            data[j - 1, i - 1][k] = [int(sign(g.z_repr)), int(sign(g.z_sg)), int(sign(g.z_src))]
-            data2[j - 1, i - 1][k] = int(sign(g.z_repr) * sign(g.z_sg) * sign(g.z_src))
+        edges[i - 1][k - 1] = 1
 
-    df1 = pd.DataFrame(data=data, index=rows, columns=columns)
-    df2 = pd.DataFrame(data=data2, index=rows, columns=columns)
-    with pd.ExcelWriter(f"n={args.n}.xlsx") as writer:
-        df1.to_excel(writer, sheet_name="ALL")
-        df2.to_excel(writer, sheet_name="ALL-to-One")
+        if type(g.z_repr) == str:
+            data[j - 1, i - 1] += f"{'{'}#{k},[{int(sign(g.z_src))}, {int(sign(g.z_sg))}, \u00B11]{'}'}, "
+        else:
+            data[j - 1, i - 1] += f"{'{'}#{k},[{int(sign(g.z_src))}, {int(sign(g.z_sg))}, {int(sign(g.z_repr))}]{'}'}, "
+
+    for i in range(len(columns)):
+        for j in range(len(edges[i])):
+            if edges[i][j] == 0:
+                data[-1, i] += f"#{j + 1},"
+
+    return pd.DataFrame(data=data, index=rows, columns=columns)
 
 
 if __name__ == '__main__':
@@ -64,4 +67,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     t = GraphSets(n=args.n, threads=args.t)
-    to_excel(t)
+
+    with pd.ExcelWriter(f"n={args.n}.xlsx") as writer:
+        get_dataframe(t, 'A', 'B').to_excel(writer, sheet_name="A-B")
+        get_dataframe(t, 'B', 'C').to_excel(writer, sheet_name="B-C")
+        get_dataframe(t, 'C', 'D').to_excel(writer, sheet_name="C-D")
