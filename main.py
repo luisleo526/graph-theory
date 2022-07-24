@@ -8,6 +8,7 @@ import time
 from sympy.matrices import Matrix
 import multiprocessing as mp
 
+
 def get_dataframe(t, src, tgt):
     columns = []
     for i in range(len(getattr(t, src).o)):
@@ -101,7 +102,7 @@ def get_matrix(t, src, tgt):
 
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn')
+    mp.set_start_method('forkserver')
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
