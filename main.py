@@ -85,8 +85,6 @@ def get_matrix(t, src, tgt):
         else:
             i = int(g.src_graph.name[1:])
 
-        k = g.src_graph.sort.index(g.reduced_edge) + 1
-
         if 'N' in g.repr.name:
             j = len(getattr(t, tgt).o) + int(g.repr.name[2:])
         else:
@@ -109,11 +107,14 @@ if __name__ == '__main__':
     t = GraphSets(n=args.n, threads=args.t)
 
     with pd.ExcelWriter(f"n={args.n}-details.xlsx") as writer:
-        get_dataframe(t, 'A', 'B').to_excel(writer, sheet_name="A-B")
-        get_dataframe(t, 'B', 'C').to_excel(writer, sheet_name="B-C")
-        get_dataframe(t, 'C', 'D').to_excel(writer, sheet_name="C-D")
+        for i in range(26):
+            get_dataframe(t, chr(65 + i), chr(65 + i + 1)).to_excel(writer,
+                                                                    sheet_name=f"{chr(65 + i)}-{chr(65 + i + 1)}")
+            if len(getattr(t, chr(65 + i + 2))) == 0:
+                break
 
     with pd.ExcelWriter(f"n={args.n}-matrix.xlsx") as writer:
-        get_matrix(t, 'A', 'B').to_excel(writer, sheet_name="A-B")
-        get_matrix(t, 'B', 'C').to_excel(writer, sheet_name="B-C")
-        get_matrix(t, 'C', 'D').to_excel(writer, sheet_name="C-D")
+        for i in range(26):
+            get_matrix(t, chr(65 + i), chr(65 + i + 1)).to_excel(writer, sheet_name=f"{chr(65 + i)}-{chr(65 + i + 1)}")
+            if len(getattr(t, chr(65 + i + 2))) == 0:
+                break
