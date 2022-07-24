@@ -383,9 +383,11 @@ class Graph:
         self._z = np.zeros(self.permutation_dim, dtype=np.float32).flatten()
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(self._get_z, range(np.prod(self.permutation_dim)),
-                               chunksize=int(np.prod(self.permutation_dim) / self.threads) + 1)
+        n = np.prod(self.permutation_dim)
+        threads = min(n // 10 ** 4 + 1, self.threads)
+
+        with mp.Pool(processes=threads) as pool:
+            results = pool.map(self._get_z, range(n), chunksize=10 ** 4)
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -395,9 +397,11 @@ class Graph:
 
         repr_graph = self.repr
 
-        with mp.Pool(processes=repr_graph.threads) as pool:
-            results = pool.map(repr_graph._get_z, range(np.prod(repr_graph.permutation_dim)),
-                               chunksize=int(np.prod(repr_graph.permutation_dim) / self.threads) + 1)
+        n = np.prod(repr_graph.permutation_dim)
+        threads = min(n // 10 ** 4 + 1, self.threads)
+
+        with mp.Pool(processes=threads) as pool:
+            results = pool.map(repr_graph._get_z, range(n), chunksize=10**4)
 
         ans = []
         for i, z, g, f in results:
