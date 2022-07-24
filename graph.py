@@ -10,7 +10,6 @@ import networkx as nx
 from math import isclose
 import matplotlib.pyplot as plt
 
-chunksize = 10**5
 
 def readGraph(n):
     with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
@@ -385,7 +384,7 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         n = np.prod(self.permutation_dim)
-        threads = min(n // chunksize + 1, self.threads)
+        chunksize = int(n / self.threads)
 
         with mp.Pool(processes=self.threads) as pool:
             results = pool.map(self._get_z, range(n), chunksize=chunksize)
@@ -399,7 +398,7 @@ class Graph:
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
-        threads = min(n // chunksize + 1, self.threads)
+        chunksize = int(n / self.threads)
 
         with mp.Pool(processes=self.threads) as pool:
             results = pool.map(repr_graph._get_z, range(n), chunksize=chunksize)
