@@ -10,10 +10,11 @@ import networkx as nx
 from math import isclose
 import matplotlib.pyplot as plt
 
+chunksize = 1000
 
 def z_task(f, n, threads):
     with mp.Pool(processes=threads) as pool:
-        results = pool.map(f, range(n), chunksize=1000)
+        results = pool.map(f, range(n), chunksize=chunksize)
     return results
 
 def readGraph(n):
