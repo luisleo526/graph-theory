@@ -118,3 +118,13 @@ if __name__ == '__main__':
             get_matrix(t, chr(65 + i), chr(65 + i + 1)).to_excel(writer, sheet_name=f"{chr(65 + i)}-{chr(65 + i + 1)}")
             if len(getattr(t, chr(65 + i + 2))) == 0:
                 break
+
+    with open("graphs.txt", "w") as f:
+        for i in range(26):
+            if len(getattr(t, chr(65+i))) > 0:
+                for g in getattr(t, chr(65+i)).o:
+                    f.write(f"{g.name}: {g.sort}\n")
+                for g in getattr(t, chr(65+i)).no:
+                    f.write(f"{g.name}: {g.sort}\n")
+            else:
+                break
