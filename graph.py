@@ -391,7 +391,7 @@ class Graph:
         # result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
         if self._orientable is None:
             n = np.prod(self.permutation_dim)
-            if n < math.factorial(int(self.n/2)):
+            if n < math.factorial(int(self.n / 2)):
                 results = parallel_loop(self._check_orientable, n, self.threads)
                 self._orientable = not any(results)
             self._permutation_sets = None
@@ -646,24 +646,25 @@ class GraphSets:
 
     def check_orientable(self, now_type):
         next_type = chr(ord(now_type) + 1)
-        for g in getattr(self, now_type).repr:
-            if g.orientable is None:
-                _ = getattr(self, next_type)
+        for X in getattr(self, now_type).repr:
+            if X.orientable is None:
+                # Collect sub-graph
+                er_sets = []
+                for Y in getattr(self, next_type):
+                    if Y.src_graph == X:
+                        er_sets.append(Y)
+                # Group by invariant
                 invar_list = []
-                for _g in abs(g).er_sets:
-                    if _g.invar not in invar_list:
-                        invar_list.append(_g.invar)
-                    if _g.repr is None:
-                        for repr in getattr(self, next_type).repr:
-                            if repr.invar == _g.invar:
-                                _g.repr = abs(_g).repr = repr
+                for g in er_sets:
+                    if g.invar not in invar_list:
+                        invar_list.append(g.invar)
+                # Create empty list for Z result of sub-graph
+                Zs = [0 for _ in invar_list]
+                for g in er_sets:
+                    Zs[invar_list.index(g.invar)] += g.z_mult
 
-                zs = [0 for i in range(len(invar_list))]
-                for _g in abs(g).er_sets:
-                    zs[invar_list.index(_g.invar)] += _g.z_mult
-
-                if all(x == 0 for x in zs):
-                    g._orientable = abs(g)._orientable = False
+                if all(x == 0 for x in Zs):
+                    X._orientable = False
                 else:
-                    g._orientable = abs(g)._orientable = True
+                    X._orientable = True
         getattr(self, now_type).group()
