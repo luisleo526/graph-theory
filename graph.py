@@ -10,6 +10,8 @@ import io
 import networkx as nx
 from math import isclose
 import matplotlib.pyplot as plt
+import math
+import functools
 
 
 def parallel_loop_task(f, n, cores, i, return_dict):
@@ -364,6 +366,11 @@ class Graph:
             self._z_sg = compute_Z(self.G, abs(self).G)
         return self._z_sg
 
+    @property
+    def z_mult(self):
+        sign = functools.partial(math.copysign, 1)
+        return int(sign(self.z_src)) * int(sign(self.z_repr)) * int(sign(self.z_sg))
+
     def _check_orientable(self, i):
 
         permutation = []
@@ -380,8 +387,9 @@ class Graph:
         # result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
         if self._orientable is None:
             n = np.prod(self.permutation_dim)
-            results = parallel_loop(self._check_orientable, n, self.threads)
-            self._orientable = not any(results)
+            if n < 10 ** 6:
+                results = parallel_loop(self._check_orientable, n, self.threads)
+                self._orientable = not any(results)
         return self._orientable
 
     @property
@@ -602,7 +610,8 @@ class GraphSets:
         self.graphs.A = GraphManager()
         for graph in readGraph(n):
             self.graphs.A.append(Graph(graph=graph, threads=threads))
-        self.graphs.A.group()
+        _ = self.graphs.A.repr
+        self.check_orientable('A')
 
     def __getattr__(self, item):
 
@@ -626,4 +635,25 @@ class GraphSets:
         for g in _graphs:
             getattr(self.graphs, next_type).append(g)
 
-        getattr(self.graphs, next_type).group()
+        _ = getattr(self.graphs, next_type).repr
+
+        self.check_orientable(next_type)
+
+    def check_orientable(self, now_type):
+        next_type = chr(ord(now_type) + 1)
+        for g in getattr(self.graphs, now_type):
+            if g.orientable is None:
+                _ = getattr(self.graphs, next_type)
+                invar_list = []
+                for _g in g.er_sets:
+                    if _g.invar not in invar_list:
+                        invar_list.append(_g.invar)
+                zs = [0 for i in range(len(invar_list))]
+                for _g in g.er_sets:
+                    zs[zs.index(_g.invar)] += _g.z_mult
+
+                if all(x == 0 for x in zs):
+                    g._orientable = False
+                else:
+                    g._orientable = True
+        getattr(self, now_type).group()
