@@ -5,16 +5,43 @@ from sympy import symbols, LC, LM, poly
 from sympy.utilities.iterables import multiset_permutations
 from collections import Iterable
 import multiprocessing as mp
+from multiprocessing import Process, Queue, Manager
 import io
 import networkx as nx
 from math import isclose
 import matplotlib.pyplot as plt
 
 
-def parallel_lop(f, iterable, threads):
-    with mp.Pool(processes=threads) as pool:
-        results = pool.map(f, iterable)
-    return results
+def parallel_loop_task(f, n, cores, i, return_dict):
+    start = i * int(n / cores)
+    end = min(n, (i + 1) * int(n / cores))
+    for j in range(start, end):
+        result = f(j)
+        return_dict[j] = result
+
+
+def parallel_loop(f, n, max_cores):
+
+    # with mp.Pool(processes=cores) as pool:
+    #     results = pool.map(f, range(n))
+
+    cores = max_cores
+    if max_cores > n:
+        cores = n
+
+    manager = Manager()
+    return_dict = manager.dict()
+    jobs = []
+    for p in range(cores):
+        jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p, return_dict,)))
+
+    for job in jobs:
+        job.start()
+
+    for job in jobs:
+        job.join()
+
+    return list(return_dict.values())
 
 
 def readGraph(n):
@@ -390,7 +417,7 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         n = np.prod(self.permutation_dim)
-        results = parallel_lop(self._get_z, range(n), self.threads)
+        results = parallel_loop(self._get_z, n, self.threads)
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -401,7 +428,7 @@ class Graph:
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
-        results = parallel_lop(repr_graph._get_z, range(n), self.threads)
+        results = parallel_loop(repr_graph._get_z, n, self.threads)
 
         ans = []
         for i, z, g, f in results:

@@ -102,7 +102,6 @@ def get_matrix(t, src, tgt):
 
 
 if __name__ == '__main__':
-    # mp.set_start_method('forkserver')
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
