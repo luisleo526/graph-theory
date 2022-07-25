@@ -381,7 +381,7 @@ class Graph:
         if self._orientable is None:
             n = np.prod(self.permutation_dim)
             results = parallel_loop(self._check_orientable, n, self.threads)
-            self._orientable = sum(results) == 0
+            self._orientable = not any(results)
         return self._orientable
 
     @property
