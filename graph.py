@@ -653,6 +653,7 @@ class GraphSets:
                 for Y in getattr(self, next_type):
                     if Y.src_graph == X:
                         er_sets.append(Y)
+                print(len(er_sets))
                 # Group by invariant
                 invar_list = []
                 for g in er_sets:
