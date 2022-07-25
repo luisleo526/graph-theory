@@ -398,7 +398,7 @@ class Graph:
             permutation += self.permutation_sets[j][indices[j]]
         sub_graph = self << permutation
 
-        return (compute_Z(self.G, sub_graph.G) + 1.0) < 1e-10 and sub_graph == self
+        return abs(compute_Z(self.G, sub_graph.G) + 1.0) < 1e-10 and sub_graph == self
 
 
     def _find_repr_z(self, i):
