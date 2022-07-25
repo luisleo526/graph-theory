@@ -615,8 +615,10 @@ class GraphSets:
         self.graphs.A = GraphManager()
         for graph in readGraph(n):
             self.graphs.A.append(Graph(graph=graph, threads=threads))
-        _ = self.graphs.A.repr
-        self.check_orientable('A')
+        for g in self.A:
+            g._orientable = abs(g)._orientable = True
+        self.A.group()
+        print("A readed")
 
     def __getattr__(self, item):
 
@@ -640,32 +642,4 @@ class GraphSets:
         for g in _graphs:
             getattr(self.graphs, next_type).append(g)
 
-        _ = getattr(self.graphs, next_type).repr
-
-        self.check_orientable(next_type)
-
-    def check_orientable(self, now_type):
-        next_type = chr(ord(now_type) + 1)
-        for X in getattr(self, now_type).repr:
-            if X.orientable is None:
-                # Collect sub-graph
-                er_sets = []
-                for Y in getattr(self, next_type):
-                    if Y.src_graph == X:
-                        er_sets.append(Y)
-                assert len(er_sets) == len(X.er_sets)
-                # Group by invariant
-                invar_list = []
-                for g in er_sets:
-                    if g.invar not in invar_list:
-                        invar_list.append(g.invar)
-                # Create empty list for Z result of sub-graph
-                Zs = [0 for _ in invar_list]
-                for g in er_sets:
-                    Zs[invar_list.index(g.invar)] += g.z_mult
-
-                if all(x == 0 for x in Zs):
-                    X._orientable = False
-                else:
-                    X._orientable = True
-        getattr(self, now_type).group()
+        getattr(self.graphs, next_type).group()
