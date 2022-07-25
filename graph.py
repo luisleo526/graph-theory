@@ -168,8 +168,6 @@ class Graph:
         self._z_repr = None
         self._sG = None
         self._er_sets = None
-        self._equiv = None
-        self._z = None
         self._permutation_sets = None
         self._permute_indices = None
         self._invar = None
@@ -332,12 +330,10 @@ class Graph:
 
     @property
     def permutation_sets(self):
-
         if self._permutation_sets is None:
             self._permutation_sets = []
             for index_set in self.permute_indices:
                 self._permutation_sets.append(list(multiset_permutations(index_set)))
-
         return self._permutation_sets
 
     @property
@@ -348,12 +344,10 @@ class Graph:
     def z_src(self):
         if self._z_src is None:
             self._z_src = compute_Zr(self.src_graph.sort, self.reduced_edge)
-
         return self._z_src
 
     @property
     def z_repr(self):
-
         if self._z_repr is None:
             self._z_repr = self.find_repr_z()
         return self._z_repr
@@ -369,6 +363,16 @@ class Graph:
         if self._z_sg is None:
             self._z_sg = compute_Z(self.G, abs(self).G)
         return self._z_sg
+
+    def _check_orientable(self, i):
+
+        permutation = []
+        indices = np.unravel_index(i, self.permutation_dim)
+        for j in range(len(self.permutation_sets)):
+            permutation += self.permutation_sets[j][indices[j]]
+        sub_graph = self << permutation
+
+        return abs(compute_Z(self.G, sub_graph.G) + 1.0) < 1e-10 and sub_graph == self
 
     @property
     def orientable(self):
@@ -390,34 +394,21 @@ class Graph:
         return nx.draw(self.nx_graph, with_labels=True, pos=nx.shell_layout(self.nx_graph),
                        font_color="whitesmoke", font_size=18, node_size=600)
 
-    def _check_orientable(self, i):
-
-        permutation = []
-        indices = np.unravel_index(i, self.permutation_dim)
-        for j in range(len(self.permutation_sets)):
-            permutation += self.permutation_sets[j][indices[j]]
-        sub_graph = self << permutation
-
-        return abs(compute_Z(self.G, sub_graph.G) + 1.0) < 1e-10 and sub_graph == self
-
-
     def _find_repr_z(self, i):
 
         permutation = []
-        indices = np.unravel_index(i, self.permutation_dim)
-        for j in range(len(self.permutation_sets)):
-            permutation += self.permutation_sets[j][indices[j]]
-        sub_graph = self << permutation
+        indices = np.unravel_index(i, self.repr.permutation_dim)
+        for j in range(len(self.repr.permutation_sets)):
+            permutation += self.repr.permutation_sets[j][indices[j]]
+        sub_graph = self.repr << permutation
 
         if sub_graph == abs(self):
-            return compute_Z(self.G, sub_graph.G), list(flatten(permutation))
+            return compute_Z(self.repr.G, sub_graph.G), list(flatten(permutation))
 
     def find_repr_z(self):
 
-        repr_graph = self.repr
-
-        n = np.prod(repr_graph.permutation_dim)
-        results = parallel_loop(repr_graph._find_repr_z, n, self.threads)
+        n = np.prod(self.repr.permutation_dim)
+        results = parallel_loop(self._find_repr_z, n, self.threads)
 
         ans = []
         for r in results:
@@ -476,8 +467,6 @@ class Graph:
 
         self._sG = None
         self._er_sets = None
-        self._equiv = None
-        self._z = None
         self._permutation_sets = None
         self._permute_indices = None
         self._invar = None
