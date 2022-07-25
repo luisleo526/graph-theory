@@ -21,7 +21,6 @@ def parallel_loop_task(f, n, cores, i, return_dict):
 
 
 def parallel_loop(f, n, max_cores):
-
     # with mp.Pool(processes=cores) as pool:
     #     results = pool.map(f, range(n))
 
@@ -162,6 +161,7 @@ class Graph:
 
     def __init__(self, graph, threads=1, src_graph=None, reduced_edge=None):
 
+        self._orientable = None
         self._f_repr = None
         self._z_src = None
         self._z_sg = None
@@ -345,12 +345,6 @@ class Graph:
         return [len(x) for x in self.permutation_sets]
 
     @property
-    def z(self):
-        if self._z is None:
-            self.get_z()
-        return self._z
-
-    @property
     def z_src(self):
         if self._z_src is None:
             self._z_src = compute_Zr(self.src_graph.sort, self.reduced_edge)
@@ -377,16 +371,14 @@ class Graph:
         return self._z_sg
 
     @property
-    def equiv(self):
-        if self._equiv is None:
-            self.get_z()
-        return self._equiv
-
-    @property
     def orientable(self):
         # For any z = -1 and f(G) = G, G is called non-orientable
-        result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
-        return result
+        # result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
+        if self._orientable is None:
+            n = np.prod(self.permutation_dim)
+            results = parallel_loop(self._check_orientable, n, self.threads)
+            self._orientable = sum(results) == 0
+        return self._orientable
 
     @property
     def nx_graph(self):
@@ -398,7 +390,7 @@ class Graph:
         return nx.draw(self.nx_graph, with_labels=True, pos=nx.shell_layout(self.nx_graph),
                        font_color="whitesmoke", font_size=18, node_size=600)
 
-    def _get_z(self, i):
+    def _check_orientable(self, i):
 
         permutation = []
         indices = np.unravel_index(i, self.permutation_dim)
@@ -406,33 +398,31 @@ class Graph:
             permutation += self.permutation_sets[j][indices[j]]
         sub_graph = self << permutation
 
-        return i, compute_Z(self.G, sub_graph.G), sub_graph, list(flatten(permutation))
+        return (compute_Z(self.G, sub_graph.G) + 1.0) < 1e-10 and sub_graph == self
 
-    def get_z(self):
 
-        # if np.prod(self.permutation_dim) > 1000000:
-        #     return
+    def _find_repr_z(self, i):
 
-        self._z = np.zeros(self.permutation_dim, dtype=np.float32).flatten()
-        self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
+        permutation = []
+        indices = np.unravel_index(i, self.permutation_dim)
+        for j in range(len(self.permutation_sets)):
+            permutation += self.permutation_sets[j][indices[j]]
+        sub_graph = self << permutation
 
-        n = np.prod(self.permutation_dim)
-        results = parallel_loop(self._get_z, n, self.threads)
-
-        for i, z, g, f in results:
-            self._z[i] = z
-            self._equiv[i] = self == g
+        if sub_graph == abs(self):
+            return compute_Z(self.G, sub_graph.G), list(flatten(permutation))
 
     def find_repr_z(self):
 
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
-        results = parallel_loop(repr_graph._get_z, n, self.threads)
+        results = parallel_loop(repr_graph._find_repr_z, n, self.threads)
 
         ans = []
-        for i, z, g, f in results:
-            if g == abs(self):
+        for r in results:
+            if r is not None:
+                z, f = r
                 ans.append({"f": f, "z": z})
 
         zs = [x["z"] for x in ans]
