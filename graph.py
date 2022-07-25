@@ -369,7 +369,10 @@ class Graph:
     @property
     def z_mult(self):
         sign = functools.partial(math.copysign, 1)
-        return int(sign(self.z_src)) * int(sign(self.z_repr)) * int(sign(self.z_sg))
+        if type(self.z_repr) == str:
+            return 0
+        else:
+            return int(sign(self.z_src)) * int(sign(self.z_repr)) * int(sign(self.z_sg))
 
     def _check_orientable(self, i):
 
