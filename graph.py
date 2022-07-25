@@ -617,7 +617,7 @@ class GraphSets:
         for g in self.A:
             g._orientable = abs(g)._orientable = True
         self.A.group()
-        print("A readed")
+        print("Finish reading A graphs")
 
     def __getattr__(self, item):
 
@@ -642,3 +642,5 @@ class GraphSets:
             getattr(self.graphs, next_type).append(g)
 
         getattr(self.graphs, next_type).group()
+
+        print(f"Finish searching {next_type} graphs")
