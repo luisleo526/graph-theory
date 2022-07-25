@@ -391,7 +391,7 @@ class Graph:
         # result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
         if self._orientable is None:
             n = np.prod(self.permutation_dim)
-            if n < math.factorial(int(self.n / 2)):
+            if n < math.factorial(int(2 * self.n / 3)):
                 results = parallel_loop(self._check_orientable, n, self.threads)
                 self._orientable = not any(results)
             self._permutation_sets = None
