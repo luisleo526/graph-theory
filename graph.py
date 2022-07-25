@@ -648,6 +648,11 @@ class GraphSets:
                 for _g in abs(g).er_sets:
                     if _g.invar not in invar_list:
                         invar_list.append(_g.invar)
+                    if _g.repr is None:
+                        for repr in getattr(self, next_type).repr:
+                            if repr.invar == _g.invar:
+                                _g.repr = abs(_g).repr = repr
+
                 zs = [0 for i in range(len(invar_list))]
                 for _g in abs(g).er_sets:
                     zs[invar_list.index(_g.invar)] += _g.z_mult
