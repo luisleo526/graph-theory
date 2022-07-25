@@ -11,6 +11,12 @@ from math import isclose
 import matplotlib.pyplot as plt
 
 
+def parallel_lop(f, iterable, threads):
+    with mp.Pool(processes=threads) as pool:
+        results = pool.map(f, iterable)
+    return results
+
+
 def readGraph(n):
     with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
         lines = f.readlines()
@@ -384,8 +390,7 @@ class Graph:
         self._equiv = np.zeros(self.permutation_dim, dtype=bool).flatten()
 
         n = np.prod(self.permutation_dim)
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(self._get_z, range(n))
+        results = parallel_lop(self._get_z, range(n), self.threads)
 
         for i, z, g, f in results:
             self._z[i] = z
@@ -396,9 +401,7 @@ class Graph:
         repr_graph = self.repr
 
         n = np.prod(repr_graph.permutation_dim)
-
-        with mp.Pool(processes=self.threads) as pool:
-            results = pool.map(repr_graph._get_z, range(n))
+        results = parallel_lop(repr_graph._get_z, range(n), self.threads)
 
         ans = []
         for i, z, g, f in results:
