@@ -352,6 +352,7 @@ class Graph:
     def z_repr(self):
         if self._z_repr is None:
             self._z_repr = self.find_repr_z()
+            self.repr._permutation_sets = None
         return self._z_repr
 
     @property
@@ -390,9 +391,10 @@ class Graph:
         # result = not np.any((abs(self.z + 1.0) < 1e-10) * self.equiv)
         if self._orientable is None:
             n = np.prod(self.permutation_dim)
-            if n < 10 ** 3:
+            if n < math.factorial(int(self.n/2)):
                 results = parallel_loop(self._check_orientable, n, self.threads)
                 self._orientable = not any(results)
+            self._permutation_sets = None
         return self._orientable
 
     @property
