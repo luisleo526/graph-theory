@@ -641,19 +641,19 @@ class GraphSets:
 
     def check_orientable(self, now_type):
         next_type = chr(ord(now_type) + 1)
-        for g in getattr(self, now_type):
+        for g in getattr(self, now_type).repr:
             if g.orientable is None:
                 _ = getattr(self, next_type)
                 invar_list = []
-                for _g in g.er_sets:
+                for _g in abs(g).er_sets:
                     if _g.invar not in invar_list:
                         invar_list.append(_g.invar)
                 zs = [0 for i in range(len(invar_list))]
-                for _g in g.er_sets:
+                for _g in abs(g).er_sets:
                     zs[invar_list.index(_g.invar)] += _g.z_mult
 
                 if all(x == 0 for x in zs):
-                    g._orientable = False
+                    g._orientable = abs(g)._orientable = False
                 else:
-                    g._orientable = True
+                    g._orientable = abs(g)._orientable = True
         getattr(self, now_type).group()
