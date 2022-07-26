@@ -432,7 +432,6 @@ class Graph:
         self._f_repr = [x["f"] for x in ans]
 
         if len(ans) > 1:
-            assert sum([abs(x) - abs(zs[0]) for x in zs]) < 1e-10
             if abs(max(zs) - min(zs)) > 1e-10:
                 pm = u"\u00B1"
                 return f"{pm}{max(zs)}"
