@@ -93,10 +93,7 @@ def get_matrix(t, src, tgt):
         else:
             j = int(g.repr.name[1:])
 
-        if type(g.z_repr) == str:
-            data[j - 1, i - 1] += 0
-        else:
-            data[j - 1, i - 1] += int(sign(g.z_src)) * int(sign(g.z_sg)) * int(sign(g.z_repr))
+        data[j - 1, i - 1] += g.z_mult
 
     return pd.DataFrame(data=data, index=rows, columns=columns), data[:len(getattr(t, tgt).o), :len(getattr(t, src).o)]
 
