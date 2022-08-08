@@ -25,8 +25,9 @@ class GraphFamily:
 
     def precompute_values(self, i):
         _ = self.graphs[i].sG.invar
-        _ = self.graphs[i].orientable
-        _ = self.graphs[i].Zall
+        if self.name != 'A':
+            _ = self.graphs[i].orientable
+            _ = self.graphs[i].Zall
 
     def set_repr(self):
         # Precompute values
