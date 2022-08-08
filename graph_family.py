@@ -88,6 +88,5 @@ class GraphFamily:
         results = parallel_loop(self.find_deeper_graphs, len(self.repr), self.threads)
         data = []
         for _data in results:
-            if _data is not None:
-                data += _data
+            data.extend(_data)
         return data
