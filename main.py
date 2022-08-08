@@ -1,12 +1,16 @@
 from graph_manager import GraphManager
 import argparse
 import pandas as pd
+import sys
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
     args = parser.parse_args()
+
+    sys.setrecursionlimit(1000000)
 
     p = GraphManager(args.n, args.t)
     data = p.get_all_data()
