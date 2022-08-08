@@ -4,15 +4,15 @@ from multiprocessing import Process, Manager
 def parallel_loop_task(f, n, cores, i, return_dict):
     start = i * int(n / cores)
     end = min(n, (i + 1) * int(n / cores))
-    if i+1 == cores:
+    if i + 1 == cores:
         end = n
+    results = []
     for j in range(start, end):
         result = f(j)
-        return_dict[j] = result
-
+        results.append(result)
+    return_dict[i] = results
 
 def parallel_loop(f, n, max_cores):
-
     cores = min(max_cores, n)
 
     with Manager() as manager:
@@ -28,9 +28,11 @@ def parallel_loop(f, n, max_cores):
         for job in jobs:
             job.join()
 
-        result = list(return_dict.values())
+        results = []
+        for _result in list(return_dict.values()):
+            results += _result
 
-    return result
+    return results
 
 
 def compute_X(edge, base=100):
