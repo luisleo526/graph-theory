@@ -82,12 +82,11 @@ class GraphFamily:
         self.repr = repr_list
 
     def find_deeper_graphs(self, i):
-        return self.repr[i].er_sets
+        _ = self.repr[i].er_sets
 
     def deeper_graphs(self):
-        results = parallel_loop(self.find_deeper_graphs, len(self.repr), self.threads)
+        _ = parallel_loop(self.find_deeper_graphs, len(self.repr), self.threads)
         data = []
-        for _data in results:
-            if _data is not None:
-                data += _data
+        for g in self.repr:
+            data += g.er_sets
         return data
