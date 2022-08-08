@@ -18,10 +18,12 @@ class GraphManager:
 
         for i in range(26):
             last_type = chr(ord('A') + i)
+            next_type = chr(ord('A') + i + 1)
+            print(f"Finding {next_type} graphs...")
             next_graphs = getattr(self.graphs, last_type).deeper_graphs()
             if len(next_graphs) > 0:
-                next_type = chr(ord('A') + i + 1)
                 setattr(self.graphs, next_type, GraphFamily(next_graphs, threads, next_type))
+                print(f"Finding representatives for {next_type} graphs...")
                 getattr(self.graphs, next_type).set_repr()
             else:
                 self.maxi = i

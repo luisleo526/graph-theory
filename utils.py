@@ -4,6 +4,8 @@ from multiprocessing import Process, Manager
 def parallel_loop_task(f, n, cores, i, return_dict):
     start = i * int(n / cores)
     end = min(n, (i + 1) * int(n / cores))
+    if i+1 == cores:
+        end = n
     for j in range(start, end):
         result = f(j)
         return_dict[j] = result
