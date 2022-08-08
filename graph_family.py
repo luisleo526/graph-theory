@@ -50,7 +50,8 @@ class GraphFamily:
                         break
 
         # Precompute orientability and Zs
-        _ = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
+        if self.name != 'A':
+            _ = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
 
         # Sorted by orientability
         self.o = []
