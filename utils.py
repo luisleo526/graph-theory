@@ -6,11 +6,8 @@ def parallel_loop_task(f, n, cores, i, return_dict):
     end = min(n, (i + 1) * int(n / cores))
     if i + 1 == cores:
         end = n
-    results = []
-    for j in range(start, end):
-        result = f(j)
-        results.append(result)
-    return_dict[i] = results
+    return_dict[i] = [f(j) for j in range(start, end)]
+
 
 def parallel_loop(f, n, max_cores):
     cores = min(max_cores, n)
