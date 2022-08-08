@@ -1,9 +1,11 @@
 from graph_parent import GraphParent
+from utils import parallel_loop
 
 
 class GraphFamily:
 
     def __init__(self, args, threads, name='A'):
+        self.repr = None
         self.no = None
         self.o = None
         self.graphs = []
@@ -62,9 +64,14 @@ class GraphFamily:
                 g.id = cnt2 + len(self.o)
                 cnt2 += 1
 
+        self.repr = repr_list
+
+    def find_deeper_graphs(self, i):
+        return self.repr[i].er_sets
+
     def deeper_graphs(self):
+        results = parallel_loop(self.find_deeper_graphs, len(self.repr), self.threads)
         data = []
-        for g in self.graphs:
-            if g.is_repr:
-                data += g.er_sets
+        for _data in results:
+            data += _data
         return data
