@@ -12,20 +12,25 @@ def parallel_loop_task(f, n, cores, i, return_dict):
 
 
 def parallel_loop(f, n, max_cores):
+
     cores = min(max_cores, n)
-    manager = Manager()
-    return_dict = manager.dict()
-    jobs = []
-    for p in range(cores):
-        jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p, return_dict,)))
 
-    for job in jobs:
-        job.start()
+    with Manager() as manager:
 
-    for job in jobs:
-        job.join()
+        return_dict = manager.dict()
+        jobs = []
+        for p in range(cores):
+            jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p, return_dict,)))
 
-    return list(return_dict.values())
+        for job in jobs:
+            job.start()
+
+        for job in jobs:
+            job.join()
+
+        result = list(return_dict.values())
+
+    return result
 
 
 def compute_X(edge, base=100):
