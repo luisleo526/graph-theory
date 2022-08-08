@@ -56,8 +56,14 @@ class GraphParent:
     def orientable(self):
         if self._orientable is None:
             n = np.prod(self.sG.permutation_dim)
-            results = parallel_loop(self.check_orientable, n, self.threads)
-            self._orientable = not any(results)
+            # results = parallel_loop(self.check_orientable, n, self.threads)
+            # self._orientable = not any(results)
+            self._orientable = True
+            for i in range(n):
+                result_is_true = self.check_orientable(i)
+                if result_is_true:
+                    self._orientable = False
+                    break
             self.sG._permutation_sets = None
         return self._orientable
 

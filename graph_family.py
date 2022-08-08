@@ -23,12 +23,14 @@ class GraphFamily:
     def __getitem__(self, item):
         return self.graphs[item]
 
-    def find_invar(self, i):
+    def precompute_values(self, i):
         _ = self.graphs[i].sG.invar
+        _ = self.graphs[i].orientable
+        _ = self.graphs[i].Zall
 
     def set_repr(self):
-        # Precompute invariant
-        _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
+        # Precompute values
+        _ = parallel_loop(self.precompute_values, len(self.graphs), self.threads)
 
         # Find representative
         invar_list = []
@@ -44,6 +46,7 @@ class GraphFamily:
                     if gr.sG.invar == g.sG.invar:
                         g.repr = gr
                         break
+
         # Find orientable
         self.o = []
         self.no = []
