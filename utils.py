@@ -27,7 +27,7 @@ def parallel_loop(f, n, max_cores):
 
         results = []
         for _result in list(return_dict.values()):
-            results += _result
+            results.extend(_result)
 
     return results
 
