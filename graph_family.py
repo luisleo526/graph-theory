@@ -23,7 +23,13 @@ class GraphFamily:
     def __getitem__(self, item):
         return self.graphs[item]
 
+    def find_invar(self, i):
+        _ = self.graphs[i].sG.invar
+
     def set_repr(self):
+        # Precompute invariant
+        _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
+
         # Find representative
         invar_list = []
         repr_list = []
