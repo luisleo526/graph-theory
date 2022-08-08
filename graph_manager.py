@@ -21,7 +21,9 @@ class GraphManager:
             next_type = chr(ord('A') + i + 1)
             print(f"Finding {next_type} graphs...")
             next_graphs = getattr(self.graphs, last_type).deeper_graphs()
-            print(f"There are {len(next_graphs)} of {next_type} graphs.")
+            print(
+                f"There are {len(next_graphs)} of {next_type} graphs from {len(getattr(self.graphs, last_type).repr)} "
+                f"of {last_type} representatives.")
             if len(next_graphs) > 0:
                 setattr(self.graphs, next_type, GraphFamily(next_graphs, threads, next_type))
                 print(f"Finding representatives for {next_type} graphs...")
