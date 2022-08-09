@@ -121,7 +121,7 @@ def readGraph(n):
     return graphs
 
 
-def get_data(src_graphs, tgt_graphs):
+def get_data(src_graphs, tgt_graphs, skip_rank=False):
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.int)
@@ -136,11 +136,14 @@ def get_data(src_graphs, tgt_graphs):
         for pref, l in [[g.name, len(g.o)], [g.name + 'N', len(g.no)]]:
             for i in range(l):
                 d.append(pref + str(i + 1))
-    print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
-          f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
+    if not skip_rank:
+        print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
+              f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
 
-    if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
-        rank = matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
+        if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
+            rank = matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
+        else:
+            rank = 0
+        return rows, columns, data, rank
     else:
-        rank = 0
-    return rows, columns, data, rank
+        return rows, columns, data, None
