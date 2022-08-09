@@ -28,6 +28,8 @@ if __name__ == '__main__':
     while True:
         tgt_graphs = src_graphs.deeper_graphs()
         if len(tgt_graphs) > 0:
+            tgt_graphs.set_repr()
+            tgt_graphs.export_graphs(f"./{args.n}_graphs")
             rows, columns, data, rank = get_data(src_graphs, tgt_graphs)
             with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
                 pd.DataFrame(data=data.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')

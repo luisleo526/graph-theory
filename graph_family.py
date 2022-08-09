@@ -92,7 +92,7 @@ class GraphFamily:
         return GraphFamily(data, self.threads, chr(ord(self.name) + 1))
 
     def export_graphs(self, directory):
-        with open(f"{directory}/{self.name}_graphs.txt") as f:
+        with open(f"{directory}/{self.name}_graphs.txt", "w") as f:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
                     f.write(f"{prefix + str(cnt):>4s}: {g.sG.edges}\n")
