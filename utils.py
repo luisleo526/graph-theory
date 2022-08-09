@@ -143,4 +143,4 @@ def get_data(src_graphs, tgt_graphs):
         rank = matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
     else:
         rank = 0
-    return rows, columns, data, 0
+    return rows, columns, data, rank
