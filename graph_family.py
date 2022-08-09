@@ -89,4 +89,14 @@ class GraphFamily:
         data = []
         for _data in results:
             data.extend(_data)
-        return data
+        return GraphFamily(data, self.threads, chr(ord(self.name) + 1))
+
+    def export_graphs(self, directory):
+        with open(f"{directory}/{self.name}_graphs.txt") as f:
+            for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
+                for cnt, g in enumerate(gs, 1):
+                    f.write(f"{prefix + str(cnt):>4s}: {g.sG.edges}\n")
+
+    def isolated(self):
+        for g in self.graphs:
+            del g.src

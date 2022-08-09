@@ -1,4 +1,6 @@
 from multiprocessing import Process, Manager
+from sympy.matrices import Matrix
+import numpy as np
 
 
 def parallel_loop_task(f, n, cores, i, return_dict):
@@ -116,3 +118,21 @@ def readGraph(n):
         graphs.append(graph)
 
     return graphs
+
+
+def get_data(src_graphs, tgt_graphs):
+    data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
+                     len(tgt_graphs.o) + len(tgt_graphs.no)),
+                    dtype=np.int)
+    for g in tgt_graphs:
+        data[g.src.id, g.repr.id] += g.Zall
+
+    rows = []
+    columns = []
+    for d, g in [[columns, src_graphs], [rows, tgt_graphs]]:
+        for pref, l in [[g.name, len(g.o)], [g.name + 'N', len(g.no)]]:
+            for i in range(l):
+                d.append(pref + str(i + 1))
+
+    return rows, columns, data, Matrix(data[:len(src_graphs.o), :len(tgt_graphs.o)]).rank()
+

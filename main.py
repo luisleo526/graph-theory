@@ -1,29 +1,39 @@
-from graph_manager import GraphManager
+from graph_family import GraphFamily
+from utils import readGraph, get_data
+from pathlib import Path
 import argparse
 import pandas as pd
 import sys
 
-if __name__ == '__main__':
+
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    sys.setrecursionlimit(100000)
 
-    p = GraphManager(args.n, args.t)
-    data = p.get_all_data()
+if __name__ == '__main__':
 
-    with pd.ExcelWriter(f"n={args.n}.xlsx") as writer:
-        ranks = {'rank': []}
-        for d in data:
-            pd.DataFrame(data=data[d].full.transpose(), index=data[d].rows, columns=data[d].columns).to_excel(writer, sheet_name=d)
-            ranks['rank'].append(data[d].rank)
-        pd.DataFrame(data=ranks, index=list(data.keys())).to_excel(writer, sheet_name='ranks')
+    args = parse_args()
 
-    with open(f"n={args.n}-graphs.txt", "w") as f:
-        for i in range(p.maxi + 1):
-            graphs = getattr(p, chr(ord('A') + i))
-            for prefix, gs in [[graphs.name, graphs.o], [graphs.name + 'N', graphs.no]]:
-                for cnt, g in enumerate(gs, 1):
-                    f.write(f"{prefix + str(cnt)}: {g.sG.edges}\n")
+    Path(f"./{args.n}_graphs").mkdir(parents=True, exist_ok=True)
+
+    src_graphs = GraphFamily(readGraph(args.n), threads=args.t)
+    for g in src_graphs:
+        g._orientable = True
+    src_graphs.set_repr()
+    src_graphs.export_graphs(f"./{args.n}_graphs")
+
+    while True:
+        tgt_graphs = src_graphs.deeper_graphs()
+        if len(tgt_graphs) > 0:
+            rows, columns, data, rank = get_data(src_graphs, tgt_graphs)
+            with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
+                pd.DataFrame(data=data.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
+                pd.DataFrame(data={'rank': [rank]}).to_excel(writer, sheet_name='Ranks')
+        else:
+            break
+        tgt_graphs.isolated()
+        del src_graphs
+        src_graphs = tgt_graphs
