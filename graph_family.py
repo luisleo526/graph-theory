@@ -11,11 +11,12 @@ class GraphFamily:
         self.graphs = []
         self.name = name
         self.threads = threads
-        if type(args[0]) == list:
-            for graph in args:
-                self.graphs.append(GraphParent(graph, threads))
-        else:
-            self.graphs = args
+        if len(args) > 0:
+            if type(args[0]) == list:
+                for graph in args:
+                    self.graphs.append(GraphParent(graph, threads))
+            else:
+                self.graphs = args
 
     def __len__(self):
         return len(self.graphs)
