@@ -81,14 +81,18 @@ class GraphFamily:
 
         self.repr = repr_list
 
+        print(f"Found {len(repr_list)} of {self.name} representatives")
+
     def find_deeper_graphs(self, i):
         return self.repr[i].er_sets
 
     def deeper_graphs(self):
+        print(f"Searching {chr(ord(self.name) + 1)} graphs...")
         results = parallel_loop(self.find_deeper_graphs, len(self.repr), self.threads)
         data = []
         for _data in results:
             data.extend(_data)
+        print(f"Found {len(data)} of {chr(ord(self.name) + 1)} graphs")
         return GraphFamily(data, self.threads, chr(ord(self.name) + 1))
 
     def export_graphs(self, directory):
