@@ -122,7 +122,7 @@ def readGraph(n):
 
 
 def get_data(src_graphs, tgt_graphs):
-    print(f"{datetime.now()}, Computing {src_graphs.name + tgt_graphs.name} matrix rank")
+    print(f"{datetime.now()}, Constructing {src_graphs.name + tgt_graphs.name} matrix")
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.int)
@@ -135,5 +135,5 @@ def get_data(src_graphs, tgt_graphs):
         for pref, l in [[g.name, len(g.o)], [g.name + 'N', len(g.no)]]:
             for i in range(l):
                 d.append(pref + str(i + 1))
-
+    print(f"{datetime.now()}, Computing {src_graphs.name + tgt_graphs.name} matrix rank")
     return rows, columns, data, matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
