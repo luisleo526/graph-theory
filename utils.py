@@ -1,6 +1,7 @@
 from multiprocessing import Process, Manager
-from sympy.matrices import Matrix
 import numpy as np
+from numpy.linalg import matrix_rank
+from datetime import datetime
 
 
 def parallel_loop_task(f, n, cores, i, return_dict):
@@ -121,6 +122,7 @@ def readGraph(n):
 
 
 def get_data(src_graphs, tgt_graphs):
+    print(f"{datetime.now()}, Computing {src_graphs.name + tgt_graphs.name} matrix rank")
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.int)
@@ -134,5 +136,4 @@ def get_data(src_graphs, tgt_graphs):
             for i in range(l):
                 d.append(pref + str(i + 1))
 
-    return rows, columns, data, Matrix(data[:len(src_graphs.o), :len(tgt_graphs.o)]).rank()
-
+    return rows, columns, data, matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
