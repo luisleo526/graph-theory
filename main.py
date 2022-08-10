@@ -46,6 +46,9 @@ if __name__ == '__main__':
                              columns=columns).to_excel(writer, sheet_name='Details')
                 if not args.skip_rank:
                     pd.DataFrame(data={'rank': [rank]}).to_excel(writer, sheet_name='Ranks')
+                if src_graphs.name == 'A':
+                    pd.DataFrame(data={'# of ZeroColumns': [len(np.where(~full.any(axis=0))[0])]}).to_excel(
+                        writer, sheet_name='ZerosColumns')
         else:
             break
         if old_half is not None and half.size > 1:
