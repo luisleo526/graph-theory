@@ -28,7 +28,7 @@ class GraphFamily:
         return self.graphs[item]
 
     def find_invar(self, i):
-        _ = self.graphs[i].sG.invar
+        _ = hash(self.graphs[i].sG.invar)
 
     def find_z_and_ori(self, i):
         _ = self.graphs[i].orientable

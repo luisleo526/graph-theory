@@ -14,12 +14,13 @@ primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67
 
 class Invariant:
     def __init__(self, data):
+        # list of tuples of unknown size
         self.data = data
         self.hash = None
 
     def __hash__(self):
         if self.hash is None:
-            result = 1015843 * primes[len(self.data)]  # twin primes
+            result = 1015843 * primes[len(self.data)]  # 1015843 is a twin prime
             i = len(self.data) - 1
             for poly in self.data:
                 for x in poly:
