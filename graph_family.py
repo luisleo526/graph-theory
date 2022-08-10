@@ -39,19 +39,18 @@ class GraphFamily:
         _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
 
         # Find representative
+        invar_set = set()
         invar_list = []
         repr_list = []
         for g in self.graphs:
-            if g.sG.invar not in invar_list:
+            if g.sG.invar not in invar_set:
+                invar_set.add(g.sG.invar)
                 invar_list.append(g.sG.invar)
                 repr_list.append(g)
                 g.repr = g
                 g.is_repr = True
             else:
-                for gr in repr_list:
-                    if gr.sG.invar == g.sG.invar:
-                        g.repr = gr
-                        break
+                g.repr = repr_list[invar_list.index(g.sG.invar)]
 
         # Precompute orientability and Zs
         if self.name != 'A':
