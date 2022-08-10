@@ -35,23 +35,23 @@ class GraphFamily:
         _ = self.graphs[i].Zall
 
     def set_repr(self):
+        print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
         # Precompute invariant
         _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
 
         # Find representative
-        invar_set = set()
         invar_list = []
         repr_list = []
         for g in self.graphs:
-            if g.sG.invar not in invar_set:
-                invar_set.add(g.sG.invar)
-                invar_list.append(hash(g.sG.invar))
+            if g.sG.invar not in invar_list:
+                invar_list.append(g.sG.invar)
                 repr_list.append(g)
                 g.repr = g
                 g.is_repr = True
             else:
-                g.repr = repr_list[invar_list.index(hash(g.sG.invar))]
+                g.repr = repr_list[invar_list.index(g.sG.invar)]
 
+        print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         # Precompute orientability and Zs
         if self.name != 'A':
             _ = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)

@@ -3,7 +3,6 @@ from sympy.matrices import Matrix
 from sympy import symbols, LC, LM, poly
 from collections import Iterable
 from sympy.utilities.iterables import multiset_permutations
-from invariant import Invariant
 import sys
 import numpy as np
 
@@ -119,7 +118,7 @@ class GraphChild:
             invar_coeff = []
             for expr in self.invar_poly:
                 invar_coeff.append(poly(expr).all_coeffs())
-            self._invar = Invariant(sorted(set([tuple(x) for x in invar_coeff])))
+            self._invar = sorted(set([tuple(x) for x in invar_coeff]))
         return self._invar
     
     @property
