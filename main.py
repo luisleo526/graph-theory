@@ -5,6 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from munch import Munch
+from datetime import datetime
 
 
 def parse_args():
@@ -37,6 +38,7 @@ if __name__ == '__main__':
             rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.skip_rank)
             if not args.skip_rank:
                 all_ranks.append(rank)
+            print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
             with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
                 pd.DataFrame(data=full.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
                 pd.DataFrame(data=details.transpose(),
@@ -46,16 +48,16 @@ if __name__ == '__main__':
                     pd.DataFrame(data={'rank': [rank]}).to_excel(writer, sheet_name='Ranks')
         else:
             break
-        tgt_graphs.isolated()
-        del src_graphs
-        src_graphs = tgt_graphs
         if old_half is not None and half.size > 1:
-            print(f"Checking half matrix multiplication for {old_half.name} and {src_graphs.name + tgt_graphs.name}...")
+            print(f"{datetime.now()}, Checking half matrix multiplication for "
+                  f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...")
             assert np.all(np.matmul(old_half.data, half) == 0)
-
         old_half = Munch()
         old_half.name = src_graphs.name + tgt_graphs.name
         old_half.data = half
+        tgt_graphs.isolated()
+        del src_graphs
+        src_graphs = tgt_graphs
 
     if not args.skip_rank:
         print('Ranks:', all_ranks)
