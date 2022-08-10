@@ -143,8 +143,8 @@ def get_data(src_graphs, tgt_graphs, skip_rank=False):
 
     for g in tgt_graphs:
         data[g.src.id, g.repr.id] += g.Zall
-        data2[g.src.id, g.repr.id] += f"#{g.src_edge + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
-        edges[g.src.id][g.src_edge] = 1
+        data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
+        edges[g.src.id][g.edge_index] = 1
 
     for i in range(edges.shape[0]):
         for j in range(len(edges[i])):

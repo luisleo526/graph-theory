@@ -13,7 +13,7 @@ def sign(x):
 
 class GraphParent:
 
-    def __init__(self, edges, threads=4, src=None, src_edge=None):
+    def __init__(self, edges, threads=4, src=None, src_edge=None, edge_index=None):
         self._er_sets = None
         self._Zall = None
         self._Zh = None
@@ -28,6 +28,7 @@ class GraphParent:
 
         self.src = src
         self.src_edge = src_edge
+        self.edge_index = edge_index
         self.threads = threads
 
         self.is_repr = False
@@ -129,7 +130,8 @@ class GraphParent:
                 for j in range(len(self.sG)):
                     if j != i:
                         new_graph.append(h(self.sG.edges[j], self.sG.edges[i]))
-                _graph = GraphParent(edges=new_graph, threads=self.threads, src=self, src_edge=i)
+                _graph = GraphParent(edges=new_graph, threads=self.threads,
+                                     src=self, src_edge=self.sG.edges[i], edge_index=i)
                 if _graph.G.is_valid:
                     self._er_sets.append(_graph)
         return self._er_sets
