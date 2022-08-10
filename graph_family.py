@@ -45,12 +45,12 @@ class GraphFamily:
         for g in self.graphs:
             if g.sG.invar not in invar_set:
                 invar_set.add(g.sG.invar)
-                invar_list.append(g.sG.invar)
+                invar_list.append(hash(g.sG.invar))
                 repr_list.append(g)
                 g.repr = g
                 g.is_repr = True
             else:
-                g.repr = repr_list[invar_list.index(g.sG.invar)]
+                g.repr = repr_list[invar_list.index(hash(g.sG.invar))]
 
         # Precompute orientability and Zs
         if self.name != 'A':
