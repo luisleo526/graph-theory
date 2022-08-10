@@ -130,6 +130,8 @@ def get_data(src_graphs, tgt_graphs, skip_rank=False):
     for g in tgt_graphs:
         data[g.src.id, g.repr.id] += g.Zall
 
+    half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
+
     rows = []
     columns = []
     for d, g in [[columns, src_graphs], [rows, tgt_graphs]]:
@@ -141,9 +143,9 @@ def get_data(src_graphs, tgt_graphs, skip_rank=False):
               f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
 
         if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
-            rank = matrix_rank(data[:len(src_graphs.o), :len(tgt_graphs.o)])
+            rank = matrix_rank(half_data)
         else:
             rank = 0
-        return rows, columns, data, rank
+        return rows, columns, data, half_data, rank
     else:
-        return rows, columns, data, None
+        return rows, columns, data, half_data, None

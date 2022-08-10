@@ -3,6 +3,7 @@ from utils import readGraph, get_data
 from pathlib import Path
 import argparse
 import pandas as pd
+import numpy as np
 
 
 def parse_args():
@@ -26,17 +27,17 @@ if __name__ == '__main__':
     src_graphs.export_graphs(f"./{args.n}_graphs")
 
     all_ranks = []
-
+    old_half = None
     while True:
         tgt_graphs = src_graphs.deeper_graphs()
         if len(tgt_graphs) > 0:
             tgt_graphs.set_repr()
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
-            rows, columns, data, rank = get_data(src_graphs, tgt_graphs, args.skip_rank)
+            rows, columns, full, half, rank = get_data(src_graphs, tgt_graphs, args.skip_rank)
             if not args.skip_rank:
                 all_ranks.append(rank)
             with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
-                pd.DataFrame(data=data.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
+                pd.DataFrame(data=full.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
                 if not args.skip_rank:
                     pd.DataFrame(data={'rank': [rank]}).to_excel(writer, sheet_name='Ranks')
         else:
@@ -44,6 +45,9 @@ if __name__ == '__main__':
         tgt_graphs.isolated()
         del src_graphs
         src_graphs = tgt_graphs
+        if old_half is not None and half.size > 1:
+            assert np.all(np.matmul(old_half, half) == 0)
+        old_half = half
 
     if not args.skip_rank:
         print('Ranks:', all_ranks)
