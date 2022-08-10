@@ -35,6 +35,18 @@ class GraphParent:
         self.repr = None
         self.name = None
 
+    def __lt__(self, other):
+        return hash(self.sG) < hash(other.sG)
+
+    def __gt__(self, other):
+        return hash(self.sG) > hash(other.sG)
+
+    def __le__(self, other):
+        return hash(self.sG) <= hash(other.sG)
+
+    def __ge__(self, other):
+        return hash(self.sG) >= hash(other.sG)
+
     def check_orientable(self, i):
         permutation = []
         indices = np.unravel_index(i, self.sG.permutation_dim)
