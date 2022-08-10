@@ -18,6 +18,7 @@ class GraphFamily:
                     self.graphs.append(GraphParent(graph, threads))
             else:
                 self.graphs = args
+        self.graphs.sort()
 
     def __len__(self):
         return len(self.graphs)
@@ -39,7 +40,7 @@ class GraphFamily:
         # Find representative
         invar_list = []
         repr_list = []
-        for g in sorted(self.graphs):
+        for g in self.graphs:
             if g.sG.invar not in invar_list:
                 invar_list.append(g.sG.invar)
                 repr_list.append(g)
@@ -98,6 +99,7 @@ class GraphFamily:
         return GraphFamily(data, self.threads, chr(ord(self.name) + 1))
 
     def export_graphs(self, directory):
+        print(f"Exporting {self.name} graphs")
         with open(f"{directory}/{self.name}_graphs.txt", "w") as f:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
