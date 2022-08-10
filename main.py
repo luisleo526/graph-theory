@@ -52,8 +52,9 @@ if __name__ == '__main__':
             break
         if old_half is not None and half.size > 1:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
-                  f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...")
+                  f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...", end='')
             assert np.all(np.matmul(old_half.data, half) == 0)
+            print("Pass")
         old_half = Munch()
         old_half.name = src_graphs.name + tgt_graphs.name
         old_half.data = half
