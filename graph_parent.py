@@ -4,6 +4,12 @@ import numpy as np
 import functools
 import math
 
+_sign = functools.partial(math.copysign, 1)
+
+
+def sign(x):
+    return int(_sign(x))
+
 
 class GraphParent:
 
@@ -71,8 +77,8 @@ class GraphParent:
     def Zs(self):
         if self._Zs is None:
             sG = self.G << [x for x in range(1, self.G.n + 1)]
-            self._Zs = compute_Z(self.G.edges, sG.edges)
-        return self._Zs
+            self._Zs = sign(compute_Z(self.G.edges, sG.edges))
+        return sign(self._Zs)
 
     def find_Zr(self, i):
         permutation = []
@@ -96,25 +102,22 @@ class GraphParent:
             assert sum([(abs(x) - abs(zs[0])) / abs(x) for x in zs]) < 1e-10
             if abs(max(zs) - min(zs)) / abs(max(zs)) > 1e-10:
                 pm = u"\u00B1"
-                self._Zr = f"{pm}{abs(max(zs))}"
+                # self._Zr = f"{pm}{abs(max(zs))}"
+                self._Zr = 0
             else:
-                self._Zr = zs[0]
+                self._Zr = sign(zs[0])
         return self._Zr
 
     @property
     def Zh(self):
         if self._Zh is None:
-            self._Zh = compute_Zh(self.src.sG, self.src_edge)
+            self._Zh = sign(compute_Zh(self.src.sG, self.src_edge))
         return self._Zh
 
     @property
     def Zall(self):
-        sign = functools.partial(math.copysign, 1)
         if self._Zall is None:
-            if type(self.Zr) == str:
-                self._Zall = 0
-            else:
-                self._Zall = int(sign(self.Zh) * sign(self.Zr) * sign(self.Zs))
+            self._Zall = self.Zh * self.Zr * self.Zs
         return self._Zall
 
     @property
@@ -126,7 +129,7 @@ class GraphParent:
                 for j in range(len(self.sG)):
                     if j != i:
                         new_graph.append(h(self.sG.edges[j], self.sG.edges[i]))
-                _graph = GraphParent(edges=new_graph, threads=self.threads, src=self, src_edge=self.sG.edges[i])
+                _graph = GraphParent(edges=new_graph, threads=self.threads, src=self, src_edge=i)
                 if _graph.G.is_valid:
                     self._er_sets.append(_graph)
         return self._er_sets
