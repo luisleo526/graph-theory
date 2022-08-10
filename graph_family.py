@@ -1,6 +1,7 @@
 from graph_parent import GraphParent
 from utils import parallel_loop
 from datetime import datetime
+from datetime import datetime
 
 
 class GraphFamily:
@@ -99,7 +100,7 @@ class GraphFamily:
         return GraphFamily(data, self.threads, chr(ord(self.name) + 1))
 
     def export_graphs(self, directory):
-        print(f"Exporting {self.name} graphs")
+        print(f"{datetime.now()}, Exporting {self.name} graphs")
         with open(f"{directory}/{self.name}_graphs.txt", "w") as f:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
