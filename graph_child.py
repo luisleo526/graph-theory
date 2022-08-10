@@ -38,10 +38,10 @@ class GraphChild:
         val = ""
         for a, b in sorted(self.edges):
             val += f"{a}{b}"
-        return int(val)
+        return hash(int(val))
 
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        return np.array_equal(self.adj, other.adj)
 
     def __lt__(self, other):
         return hash(self) < hash(other)
