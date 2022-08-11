@@ -72,7 +72,7 @@ class GraphFamily:
         # Parallel execution, find representatives
         repr_list = []
         invar_list = []
-        cores = min(self.threads, int(len(self.graphs) / 2))
+        cores = min(self.threads, max(1, int(len(self.graphs) / 2)))
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
