@@ -91,11 +91,11 @@ class GraphFamily:
         self.repr = repr_list
         self.invar = invar_list
 
-        n = self.__len__()
-        print(self.repr[self.invar.index(self.graphs[int(n/2)].sG.invar)].sG.edges)
-
         print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
         _ = parallel_loop(self.set_repr_task, len(self.graphs), self.threads)
+
+        for g in self.graphs:
+            assert g.repr is not None
 
         print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         if self.name != 'A':
