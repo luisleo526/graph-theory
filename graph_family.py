@@ -91,17 +91,19 @@ class GraphFamily:
                     if g.sG.invar not in invar_list:
                         invar_list.append(g.sG.invar)
                         repr_list.append(g)
-                        g.is_repr = True
-                        g.repr = g
-            jobs = []
-            cores = min(self.threads, len(self.graphs))
-            print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
-            for p in range(cores):
-                jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, )))
-            for job in jobs:
-                job.start()
-            for job in jobs:
-                job.join()
+
+        print(invar_list)
+        print(repr_list)
+
+        jobs = []
+        cores = min(self.threads, len(self.graphs))
+        print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
+        for p in range(cores):
+            jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, )))
+        for job in jobs:
+            job.start()
+        for job in jobs:
+            job.join()
 
         print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         if self.name != 'A':
