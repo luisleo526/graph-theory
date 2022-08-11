@@ -5,6 +5,7 @@ from collections import Iterable
 from sympy.utilities.iterables import multiset_permutations
 import sys
 import numpy as np
+import hashlib
 
 
 def flatten(lis):
@@ -84,7 +85,7 @@ class GraphChild:
         if self._n is None:
             self._n = max([max(x) for x in self.edges])
         return self._n
-    
+
     @property
     def adj(self):
         if self._adj is None:
@@ -119,8 +120,15 @@ class GraphChild:
             for expr in self.invar_poly:
                 invar_coeff.append(poly(expr).all_coeffs())
             self._invar = sorted(set([tuple(x) for x in invar_coeff]))
+            m = hashlib.md5()
+            for p in self._invar:
+                msg = ""
+                for x in p:
+                    msg += f"{x}"
+                m.update(msg.encode())
+            self._invar = m.hexdigest()
         return self._invar
-    
+
     @property
     def stdf(self):
         if self._stdf is None:
@@ -136,7 +144,7 @@ class GraphChild:
                             k = i
                         else:
                             k = j
-                        if abs(self.invar_poly[k].coeff(LM(diff))) > sys.float_info.epsilon*2:
+                        if abs(self.invar_poly[k].coeff(LM(diff))) > sys.float_info.epsilon * 2:
                             ans.append(LC(diff))
                         else:
                             ans.append(-LC(diff))
@@ -153,7 +161,7 @@ class GraphChild:
             self._stdf = self._stdf[:-1]
 
         return self._stdf
-    
+
     @property
     def permutation_sets(self):
         if self._permutation_sets is None:
@@ -165,5 +173,3 @@ class GraphChild:
     @property
     def permutation_dim(self):
         return [math.factorial(len(x)) for x in self.stdf]
-
-
