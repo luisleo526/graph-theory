@@ -56,6 +56,9 @@ class GraphFamily:
         print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
         _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
 
+        for g in self.graphs:
+            assert g.sG._invar is not None
+
         # Sequential execution
         # invar_list = []
         # repr_list = []
