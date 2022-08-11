@@ -35,7 +35,7 @@ if __name__ == '__main__':
         if len(tgt_graphs) > 0:
             tgt_graphs.set_repr()
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
-            rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.skip_rank)
+            rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.t, args.skip_rank)
             if not args.skip_rank:
                 all_ranks.append(rank)
             print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
