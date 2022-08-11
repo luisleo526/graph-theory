@@ -93,11 +93,10 @@ class GraphFamily:
                         invar_list.append(g.sG.invar)
                         repr_list.append(g)
                         g.is_repr = True
-            return_dict = manager.dict()
             jobs = []
             cores = min(self.threads, len(self.graphs))
             for p in range(cores):
-                jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, return_dict,)))
+                jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, )))
             for job in jobs:
                 job.start()
             for job in jobs:
