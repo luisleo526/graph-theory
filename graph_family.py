@@ -39,6 +39,7 @@ class GraphFamily:
         # Precompute invariant
         _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
 
+        print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
         # Find representative
         invar_list = []
         repr_list = []
@@ -56,6 +57,7 @@ class GraphFamily:
         if self.name != 'A':
             _ = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
 
+        print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         # Sorted by orientability
         self.o = []
         self.no = []
@@ -71,6 +73,7 @@ class GraphFamily:
                 cnt2 += 1
                 g.name = self.name + "N" + str(cnt2)
 
+        print(f"{datetime.now()}, Giving name for {self.name} representatives")
         # Set index for representative
         cnt1 = 0
         cnt2 = 0
@@ -84,7 +87,7 @@ class GraphFamily:
 
         self.repr = repr_list
 
-        print(f"{datetime.now()}, Found {len(repr_list)} of {self.name} representatives")
+        print(f"{datetime.now()}, Found {len(self.o)} of {self.name} graphs and {len(self.no)} of {self.name}N graphs")
 
     def find_deeper_graphs(self, i):
         return self.repr[i].er_sets
