@@ -29,11 +29,10 @@ class GraphFamily:
         return self.graphs[item]
 
     def find_invar(self, i):
-        _ = self.graphs[i].sG.invar
+        return i, self.graphs[i].sG.invar
 
     def find_z_and_ori(self, i):
-        _ = self.graphs[i].orientable
-        _ = self.graphs[i].Zall
+        return i, self.graphs[i].orientable, self.graphs[i].Zh, self.graphs[i].Zr, self.graphs[i].Zs
 
     def find_unique_invar(self, i, cores, return_dict):
         start = i * int(len(self.graphs) / cores)
@@ -50,14 +49,13 @@ class GraphFamily:
         return_dict[i] = repr_list
 
     def set_repr_task(self, i):
-        self.graphs[i].repr = self.repr[self.invar.index(self.graphs[i].sG.invar)]
+        return i, self.invar.index(self.graphs[i].sG.invar)
 
     def set_repr(self):
         print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
-        _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
-
-        for g in self.graphs:
-            assert g.sG._invar is not None
+        results = parallel_loop(self.find_invar, len(self.graphs), self.threads)
+        for i, invar in results:
+            self.graphs[i]._invar = invar
 
         # Sequential execution
         # invar_list = []
@@ -95,14 +93,18 @@ class GraphFamily:
         self.invar = invar_list
 
         print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
-        _ = parallel_loop(self.set_repr_task, len(self.graphs), self.threads)
-
-        for g in self.graphs:
-            assert g.repr is not None
+        results = parallel_loop(self.set_repr_task, len(self.graphs), self.threads)
+        for i, j in results:
+            self.graphs[i].repr = self.repr[j]
 
         print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         if self.name != 'A':
-            _ = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
+            results = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
+            for i, ori, zh, zr, zs in results:
+                self.graphs[i]._orientable = ori
+                self.graphs[i]._Zh = zh
+                self.graphs[i]._Zr = zr
+                self.graphs[i]._Zs = zs
 
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
