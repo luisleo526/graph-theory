@@ -7,6 +7,7 @@ from multiprocessing import Process, Manager
 class GraphFamily:
 
     def __init__(self, args, threads, name='A'):
+        self.invar = None
         self.repr = None
         self.no = None
         self.o = None
@@ -48,13 +49,8 @@ class GraphFamily:
 
         return_dict[i] = repr_list
 
-    def set_repr_task(self, i, cores, invar_list, repr_list):
-        start = i * int(len(self.graphs) / cores)
-        end = min(len(self.graphs), (i + 1) * int(len(self.graphs) / cores))
-        if i + 1 == cores:
-            end = len(self.graphs)
-        for i in range(start, end):
-            self.graphs[i].repr = repr_list[invar_list.index(self.graphs[i].sG.invar)]
+    def set_repr_task(self, i):
+        self.graphs[i].repr = self.repr[self.invar.index(self.graphs[i].sG.invar)]
 
     def set_repr(self):
         print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
@@ -92,18 +88,11 @@ class GraphFamily:
                         invar_list.append(g.sG.invar)
                         repr_list.append(g)
 
-        print(invar_list)
-        print(repr_list)
+        self.repr = repr_list
+        self.invar = invar_list
 
-        jobs = []
-        cores = min(self.threads, len(self.graphs))
         print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
-        for p in range(cores):
-            jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, )))
-        for job in jobs:
-            job.start()
-        for job in jobs:
-            job.join()
+        _ = parallel_loop(self.set_repr_task, len(self.graphs), self.threads)
 
         print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         if self.name != 'A':
@@ -134,8 +123,6 @@ class GraphFamily:
             else:
                 g.id = cnt2 + len(self.o)
                 cnt2 += 1
-
-        self.repr = repr_list
 
         print(f"{datetime.now()}, Found {len(self.o)} of {self.name} graphs and {len(self.no)} of {self.name}N graphs")
 
