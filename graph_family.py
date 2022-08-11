@@ -60,8 +60,6 @@ class GraphFamily:
         print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
         _ = parallel_loop(self.find_invar, len(self.graphs), self.threads)
 
-        print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
-
         # Sequential execution
         # invar_list = []
         # repr_list = []
@@ -81,6 +79,7 @@ class GraphFamily:
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
+            print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
             for p in range(cores):
                 jobs.append(Process(target=self.find_unique_invar, args=(p, cores, return_dict,)))
             for job in jobs:
@@ -95,6 +94,7 @@ class GraphFamily:
                         g.is_repr = True
             jobs = []
             cores = min(self.threads, len(self.graphs))
+            print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
             for p in range(cores):
                 jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, )))
             for job in jobs:
