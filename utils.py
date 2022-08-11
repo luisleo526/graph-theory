@@ -121,7 +121,35 @@ def readGraph(n):
     return graphs
 
 
-def get_data(src_graphs, tgt_graphs, skip_rank=False):
+def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
+
+    data = np.zeros((m, n), dtype=np.int)
+    data2 = np.zeros((m, n + 1), dtype=object)
+    edges = np.empty(m, dtype=object)
+
+    for i in range(edges.shape[0]):
+        edges[i] = [0 for _ in range(num_edges)]
+
+    for i in range(data2.shape[0]):
+        for j in range(data2.shape[1]):
+            data2[i, j] = ""
+
+    start = p * int(len(tgt_graphs) / n_cores)
+    end = min(len(tgt_graphs), (p + 1) * int(len(tgt_graphs) / n_cores))
+
+    if p + 1 == n_cores:
+        end = len(tgt_graphs)
+
+    for i in range(start, end):
+        g = tgt_graphs[i]
+        data[g.src.id, g.repr.id] += g.Zall
+        data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
+        edges[g.src.id][g.edge_index] += 1
+
+    return_dict[p] = (data, data2, edges)
+
+
+def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.int)
@@ -141,10 +169,33 @@ def get_data(src_graphs, tgt_graphs, skip_rank=False):
     print(f"{datetime.now()}, Constructing {src_graphs.name + tgt_graphs.name} full matrix of size "
           f"{len(src_graphs.o) + len(src_graphs.no)}x{len(tgt_graphs.o) + len(tgt_graphs.no)}")
 
-    for g in tgt_graphs:
-        data[g.src.id, g.repr.id] += g.Zall
-        data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
-        edges[g.src.id][g.edge_index] = 1
+    # # Sequential execution
+    # for g in tgt_graphs:
+    #     data[g.src.id, g.repr.id] += g.Zall
+    #     data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
+    #     edges[g.src.id][g.edge_index] += 1
+
+    # Parallel execution
+    with Manager() as manager:
+
+        return_dict = manager.dict()
+        jobs = []
+        for p in range(cores):
+            jobs.append(Process(target=parallel_loop_task, args=(get_data_task, p, cores, tgt_graphs,
+                                                                 len(src_graphs.o) + len(src_graphs.no),
+                                                                 len(tgt_graphs.o) + len(tgt_graphs.no),
+                                                                 len(src_graphs[0].sG.edges), return_dict,)))
+
+        for job in jobs:
+            job.start()
+
+        for job in jobs:
+            job.join()
+
+        for a, b, c in list(return_dict.values()):
+            data += a
+            data2 += b
+            edges += c
 
     for i in range(edges.shape[0]):
         for j in range(len(edges[i])):
