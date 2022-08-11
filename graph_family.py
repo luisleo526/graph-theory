@@ -98,6 +98,10 @@ class GraphFamily:
             cores = min(self.threads, len(self.graphs))
             for p in range(cores):
                 jobs.append(Process(target=self.set_repr_task, args=(p, cores, invar_list, repr_list, return_dict,)))
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
 
         print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
         if self.name != 'A':
