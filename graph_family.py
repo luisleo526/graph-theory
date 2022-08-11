@@ -92,6 +92,7 @@ class GraphFamily:
                         invar_list.append(g.sG.invar)
                         repr_list.append(g)
                         g.is_repr = True
+                        g.repr = g
             jobs = []
             cores = min(self.threads, len(self.graphs))
             print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
