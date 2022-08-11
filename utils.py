@@ -122,7 +122,6 @@ def readGraph(n):
 
 
 def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
-
     data = np.zeros((m, n), dtype=np.int)
     data2 = np.zeros((m, n + 1), dtype=object)
     edges = np.empty(m, dtype=object)
@@ -181,10 +180,10 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
         return_dict = manager.dict()
         jobs = []
         for p in range(cores):
-            jobs.append(Process(target=parallel_loop_task, args=(get_data_task, p, cores, tgt_graphs,
-                                                                 len(src_graphs.o) + len(src_graphs.no),
-                                                                 len(tgt_graphs.o) + len(tgt_graphs.no),
-                                                                 len(src_graphs[0].sG.edges), return_dict,)))
+            jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs,
+                                                            len(src_graphs.o) + len(src_graphs.no),
+                                                            len(tgt_graphs.o) + len(tgt_graphs.no),
+                                                            len(src_graphs[0].sG.edges), return_dict,)))
 
         for job in jobs:
             job.start()
