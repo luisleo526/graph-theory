@@ -75,7 +75,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
 
         self.repr_indices = list(range(len(self.graphs)))
-        for _ in range(3):
+        for _ in range(2):
             random.shuffle(self.repr_indices)
             cores = min(self.threads, max(1, int(len(self.repr_indices) / 2)))
             new_indices = []
