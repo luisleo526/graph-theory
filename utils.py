@@ -161,7 +161,7 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
         g = tgt_graphs[i]
         data[g.src.id, g.repr.id] += g.Zall
         data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
-        edges[g.src.id][g.edge_index] += 1
+        edges[g.src.id, g.edge_index] += 1
 
     return_dict[p] = (data, data2, edges)
 
@@ -174,10 +174,8 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
     data2 = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                       len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
                      dtype=object)
-    edges = np.empty(len(src_graphs.o) + len(src_graphs.no), dtype=object)
 
-    for i in range(edges.shape[0]):
-        edges[i] = [0 for _ in range(len(src_graphs[0].sG.edges))]
+    edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs[0].sG.edges)), dtype=np.int)
 
     for i in range(data2.shape[0]):
         for j in range(data2.shape[1]):
@@ -185,12 +183,6 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
 
     print(f"{datetime.now()}, Constructing {src_graphs.name + tgt_graphs.name} full matrix of size "
           f"{len(src_graphs.o) + len(src_graphs.no)}x{len(tgt_graphs.o) + len(tgt_graphs.no)}")
-
-    # # Sequential execution
-    # for g in tgt_graphs:
-    #     data[g.src.id, g.repr.id] += g.Zall
-    #     data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
-    #     edges[g.src.id][g.edge_index] += 1
 
     # Parallel execution
     with Manager() as manager:
@@ -215,8 +207,8 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
             edges += c
 
     for i in range(edges.shape[0]):
-        for j in range(len(edges[i])):
-            if edges[i][j] == 0:
+        for j in range(edges.shape[1]):
+            if edges[i, j] == 0:
                 data2[i, -1] += f"#{j + 1}, "
 
     half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
