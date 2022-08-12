@@ -44,7 +44,7 @@ class GraphFamily:
         for i in range(start, end):
             if self.graphs[i].sG.invar not in invar_list:
                 invar_list.append(self.graphs[i].sG.invar)
-                repr_list.append(self.graphs[i])
+                repr_list.append(i)
 
         return_dict[p] = repr_list
 
@@ -60,9 +60,9 @@ class GraphFamily:
         no = []
         for i in range(start, end):
             if self.repr[i].orientable:
-                o.append(self.repr[i])
+                o.append(i)
             else:
-                no.append(self.repr[i])
+                no.append(i)
         return_dict[p] = (o, no)
 
     def set_repr(self):
@@ -98,10 +98,10 @@ class GraphFamily:
             for job in jobs:
                 job.join()
             for sub_list in list(return_dict.values()):
-                for g in sub_list:
-                    if g.sG.invar not in invar_list:
-                        invar_list.append(g.sG.invar)
-                        repr_list.append(g)
+                for i in sub_list:
+                    if self.graphs[i].sG.invar not in invar_list:
+                        invar_list.append(self.graphs[i].sG.invar)
+                        repr_list.append(self.graphs[i])
 
         self.repr = repr_list
         self.invar = invar_list
@@ -134,8 +134,8 @@ class GraphFamily:
             for job in jobs:
                 job.join()
             for o, no in list(return_dict.values()):
-                self.o.extend(o)
-                self.no.extend(no)
+                self.o.extend([self.repr[i] for i in o])
+                self.no.extend([self.repr[i] for i in no])
 
         print(f"{datetime.now()}, Giving name, id for {self.name} representatives")
         for s, prefix, _list in [[0, self.name, self.o], [len(self.o), self.name + 'N', self.no]]:
