@@ -68,7 +68,7 @@ def compute_Z(src, tgt):
         else:
             return 1
     else:
-        return float(numerator) / float(denominator)
+        return numerator / denominator
 
 
 def h(edge, redge):
