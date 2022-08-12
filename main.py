@@ -6,12 +6,14 @@ import pandas as pd
 import numpy as np
 from munch import Munch
 from datetime import datetime
+import glob
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
+    parser.add_argument("-from_graph", default="", type=str)
     parser.add_argument("-skip_rank", action='store_true')
     return parser.parse_args()
 
@@ -22,11 +24,30 @@ if __name__ == '__main__':
 
     Path(f"./{args.n}_graphs").mkdir(parents=True, exist_ok=True)
 
-    src_graphs = GraphFamily(readGraph(args.n), threads=args.t)
-    for g in src_graphs:
-        g._orientable = True
-    src_graphs.set_repr()
-    src_graphs.export_graphs(f"./{args.n}_graphs")
+    if args.from_graph != "":
+        print(f"{datetime.now()}, Reading from ./{args.n}_graphs/{args.from_graph}_graphs.txt")
+        graphs = []
+        with open(f"./{args.n}_graphs/{args.from_graph}_graphs.txt", "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                exec("graphs.append(" + line[line.index(":") + 1:].strip() + ")")
+        src_graphs = GraphFamily(graphs, threads=args.t, name=args.from_graph)
+        if args.from_graph == 'A':
+            for g in src_graphs:
+                g._orientable = True
+            src_graphs.set_repr()
+        else:
+            src_graphs = src_graphs.deeper_graphs()
+            src_graphs.isolated()
+    else:
+        print(f"{datetime.now()}, Reading from GenReg output")
+        src_graphs = GraphFamily(readGraph(args.n), threads=args.t)
+        for g in src_graphs:
+            g._orientable = True
+        src_graphs.set_repr()
+        src_graphs.export_graphs(f"./{args.n}_graphs")
+
+    print(f"{datetime.now()}, Finished reading data")
 
     all_ranks = []
     old_half = None
