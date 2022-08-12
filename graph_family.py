@@ -76,7 +76,7 @@ class GraphFamily:
 
         self.repr_indices = list(range(len(self.graphs)))
         sub_repr = []
-        for _ in range(2):
+        for _ in range(1):
             random.shuffle(self.repr_indices)
             cores = min(self.threads, max(1, int(len(self.repr_indices) / 2)))
             new_indices = []
@@ -97,7 +97,7 @@ class GraphFamily:
 
         repr_list = [self.graphs[i] for i in sub_repr]
         invar_list = [self.graphs[i].sG.invar for i in sub_repr]
-        for i in [x for x in self.repr_indices if x not in sub_repr]:
+        for i in list(set(self.repr_indices) - set(sub_repr)):
             if self.graphs[i].sG.invar not in invar_list:
                 invar_list.append(self.graphs[i].sG.invar)
                 repr_list.append(self.graphs[i])
