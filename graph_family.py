@@ -162,7 +162,7 @@ class GraphFamily:
         with open(f"{directory}/{self.name}_graphs.txt", "w") as f:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
-                    f.write(f"{prefix + str(cnt):>4s}: {g.sG.edges}\n")
+                    f.write(f"{prefix + str(cnt):>8s}: {g.sG.edges}\n")
 
     def isolated(self):
         for g in self.graphs:
