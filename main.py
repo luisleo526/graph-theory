@@ -49,7 +49,7 @@ if __name__ == '__main__':
                 pd.DataFrame(data={'# of ZeroColumns': [len(np.where(~full.any(axis=1))[0])]}).to_excel(
                     writer, sheet_name='ZerosColumns')
                 pd.DataFrame(data={'Column ID': [x + 1 for x in list(
-                    np.where(~half.transpose().any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
+                    np.where(~half.any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
         else:
             break
         if old_half is not None and half.size > 0:
