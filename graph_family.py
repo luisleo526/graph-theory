@@ -34,10 +34,10 @@ class GraphFamily:
     def find_z_and_ori(self, i):
         return i, self.graphs[i].orientable, self.graphs[i].Zh, self.graphs[i].Zr, self.graphs[i].Zs
 
-    def find_unique_invar(self, i, cores, return_dict):
-        start = i * int(len(self.graphs) / cores)
-        end = min(len(self.graphs), (i + 1) * int(len(self.graphs) / cores))
-        if i + 1 == cores:
+    def find_unique_invar(self, p, cores, return_dict):
+        start = p * int(len(self.graphs) / cores)
+        end = min(len(self.graphs), (p + 1) * int(len(self.graphs) / cores))
+        if p + 1 == cores:
             end = len(self.graphs)
         invar_list = []
         repr_list = []
@@ -46,10 +46,24 @@ class GraphFamily:
                 invar_list.append(self.graphs[i].sG.invar)
                 repr_list.append(self.graphs[i])
 
-        return_dict[i] = repr_list
+        return_dict[p] = repr_list
 
     def set_repr_task(self, i):
         return i, self.invar.index(self.graphs[i].sG.invar)
+
+    def split_repr(self, p, cores, return_dict):
+        start = p * int(len(self.repr) / cores)
+        end = min(len(self.repr), (p + 1) * int(len(self.repr) / cores))
+        if p + 1 == cores:
+            end = len(self.repr)
+        o = []
+        no = []
+        for i in range(start, end):
+            if self.repr[i].orientable:
+                o.append(self.repr[i])
+            else:
+                no.append(self.repr[i])
+        return_dict[p] = (o, no)
 
     def set_repr(self):
         print(f"{datetime.now()}, Computing invariant for {self.name} graphs")
@@ -109,30 +123,27 @@ class GraphFamily:
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
         self.no = []
-        cnt1 = 0
-        cnt2 = 0
-        for g in repr_list:
-            if g.orientable:
-                self.o.append(g)
-                cnt1 += 1
-                g.name = self.name + str(cnt1)
-            else:
-                self.no.append(g)
-                cnt2 += 1
-                g.name = self.name + "N" + str(cnt2)
+        cores = min(self.threads, max(1, int(len(self.repr) / 2)))
+        with Manager() as manager:
+            return_dict = manager.dict()
+            jobs = []
+            for p in range(cores):
+                jobs.append(Process(target=self.split_repr, args=(p, cores, return_dict,)))
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
+            for o, no in list(return_dict.values()):
+                self.o.extend(o)
+                self.no.extend(no)
 
-        print(f"{datetime.now()}, Giving name for {self.name} representatives")
-        cnt1 = 0
-        cnt2 = 0
-        for g in repr_list:
-            if g.orientable:
-                g.id = cnt1
-                cnt1 += 1
-            else:
-                g.id = cnt2 + len(self.o)
-                cnt2 += 1
+        print(f"{datetime.now()}, Giving name, id for {self.name} representatives")
+        for s, prefix, _list in [[0, self.name, self.o], [len(self.o), self.name + 'N', self.no]]:
+            for cnt, g in enumerate(_list, 1):
+                g.name = prefix + str(cnt + s)
+                g.id = cnt - 1 + s
 
-        print(f"{datetime.now()}, Found {len(self.o)} of {self.name} graphs and {len(self.no)} of {self.name}N graphs")
+        print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs")
 
     def find_deeper_graphs(self, i):
         return self.repr[i].er_sets
