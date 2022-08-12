@@ -52,7 +52,7 @@ if __name__ == '__main__':
                     np.where(~half.transpose().any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
         else:
             break
-        if old_half is not None and half.size > 1:
+        if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
                   f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...", end='')
             assert np.all(np.matmul(old_half.data, half) == 0)
