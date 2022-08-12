@@ -111,7 +111,7 @@ class GraphFamily:
         for i, j in results:
             self.graphs[i].repr = self.repr[j]
 
-        print(f"{datetime.now()}, Computing orientability and Zs for {self.name} graphs")
+        print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")
         if self.name != 'A':
             results = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
             for i, ori, zh, zr, zs in results:
