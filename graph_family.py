@@ -2,6 +2,7 @@ from graph_parent import GraphParent
 from utils import parallel_loop
 from datetime import datetime
 from multiprocessing import Process, Manager
+import random
 
 
 class GraphFamily:
@@ -35,16 +36,16 @@ class GraphFamily:
         return i, self.graphs[i].orientable, self.graphs[i].Zh, self.graphs[i].Zr, self.graphs[i].Zs
 
     def find_unique_invar(self, p, cores, return_dict):
-        start = p * int(len(self.graphs) / cores)
-        end = min(len(self.graphs), (p + 1) * int(len(self.graphs) / cores))
+        start = p * int(len(self.repr_indices) / cores)
+        end = min(len(self.repr_indices), (p + 1) * int(len(self.repr_indices) / cores))
         if p + 1 == cores:
-            end = len(self.graphs)
+            end = len(self.repr_indices)
         invar_list = []
         repr_list = []
         for i in range(start, end):
-            if self.graphs[i].sG.invar not in invar_list:
-                invar_list.append(self.graphs[i].sG.invar)
-                repr_list.append(i)
+            if self.graphs[self.repr_indices[i]].sG.invar not in invar_list:
+                invar_list.append(self.graphs[self.repr_indices[i]].sG.invar)
+                repr_list.append(self.repr_indices[i])
 
         return_dict[p] = repr_list
 
@@ -71,37 +72,32 @@ class GraphFamily:
         for i, invar in results:
             self.graphs[i]._invar = invar
 
-        # Sequential execution
-        # invar_list = []
-        # repr_list = []
-        # for g in self.graphs:
-        #     if g.sG.invar not in invar_list:
-        #         invar_list.append(g.sG.invar)
-        #         repr_list.append(g)
-        #         g.repr = g
-        #         g.is_repr = True
-        #     else:
-        #         g.repr = repr_list[invar_list.index(g.sG.invar)]
+        print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
 
-        # Parallel execution, find representatives
+        self.repr_indices = list(range(len(self.graphs)))
+        for _ in range(3):
+            random.shuffle(self.repr_indices)
+            cores = min(self.threads, max(1, int(len(self.repr_indices) / 2)))
+            new_indices = []
+            with Manager() as manager:
+                return_dict = manager.dict()
+                jobs = []
+                for p in range(cores):
+                    jobs.append(Process(target=self.find_unique_invar, args=(p, cores, return_dict,)))
+                for job in jobs:
+                    job.start()
+                for job in jobs:
+                    job.join()
+                for sub_list in list(return_dict.values()):
+                    new_indices.extend(sub_list)
+            self.repr_indices = new_indices
+
         repr_list = []
         invar_list = []
-        cores = min(self.threads, max(1, int(len(self.graphs) / 2)))
-        with Manager() as manager:
-            return_dict = manager.dict()
-            jobs = []
-            print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
-            for p in range(cores):
-                jobs.append(Process(target=self.find_unique_invar, args=(p, cores, return_dict,)))
-            for job in jobs:
-                job.start()
-            for job in jobs:
-                job.join()
-            for sub_list in list(return_dict.values()):
-                for i in sub_list:
-                    if self.graphs[i].sG.invar not in invar_list:
-                        invar_list.append(self.graphs[i].sG.invar)
-                        repr_list.append(self.graphs[i])
+        for i in self.repr_indices:
+            if self.graphs[i].sG.invar not in invar_list:
+                invar_list.append(self.graphs[i].sG.invar)
+                repr_list.append(self.graphs[i])
 
         self.repr = repr_list
         self.invar = invar_list

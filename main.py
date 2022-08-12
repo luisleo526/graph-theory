@@ -32,6 +32,7 @@ if __name__ == '__main__':
             for line in lines:
                 exec("graphs.append(" + line[line.index(":") + 1:].strip() + ")")
         src_graphs = GraphFamily(graphs, threads=args.t, name=args.from_graph)
+        print(f"{datetime.now()}, Finished reading data")
         if args.from_graph == 'A':
             for g in src_graphs:
                 g._orientable = True
@@ -42,12 +43,11 @@ if __name__ == '__main__':
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
         src_graphs = GraphFamily(readGraph(args.n), threads=args.t)
+        print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
         src_graphs.set_repr()
         src_graphs.export_graphs(f"./{args.n}_graphs")
-
-    print(f"{datetime.now()}, Finished reading data")
 
     all_ranks = []
     old_half = None
