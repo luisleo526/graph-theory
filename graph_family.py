@@ -40,11 +40,11 @@ class GraphFamily:
         end = min(len(self.repr_indices), (p + 1) * int(len(self.repr_indices) / cores))
         if p + 1 == cores:
             end = len(self.repr_indices)
-        invar_list = []
+        invar_list = set()
         repr_list = []
         for i in range(start, end):
             if self.graphs[self.repr_indices[i]].sG.invar not in invar_list:
-                invar_list.append(self.graphs[self.repr_indices[i]].sG.invar)
+                invar_list.add(self.graphs[self.repr_indices[i]].sG.invar)
                 repr_list.append(self.repr_indices[i])
 
         return_dict[p] = repr_list

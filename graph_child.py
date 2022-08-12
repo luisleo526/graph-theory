@@ -21,6 +21,7 @@ class GraphChild:
 
     def __init__(self, edges):
 
+        self.hash = None
         self._permutation_sets = None
         self._stdf = None
         self._invar = None
@@ -36,10 +37,12 @@ class GraphChild:
                 self.edges.append((a, b))
 
     def __hash__(self):
-        val = ""
-        for a, b in sorted(self.edges):
-            val += f"{a}{b}"
-        return hash(int(val))
+        if self.hash is None:
+            val = ""
+            for a, b in sorted(self.edges):
+                val += f"{a}{b}"
+            self.hash = hash(int(val))
+        return self.hash
 
     def __eq__(self, other):
         return np.array_equal(self.adj, other.adj)
