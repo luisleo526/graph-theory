@@ -142,10 +142,7 @@ def readGraph(n):
 def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
     data = np.zeros((m, n), dtype=np.int)
     data2 = np.zeros((m, n + 1), dtype=object)
-    edges = np.empty(m, dtype=object)
-
-    for i in range(edges.shape[0]):
-        edges[i] = [0 for _ in range(num_edges)]
+    edges = np.zeros((m, num_edges), dtype=np.int)
 
     for i in range(data2.shape[0]):
         for j in range(data2.shape[1]):
