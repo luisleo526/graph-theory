@@ -110,7 +110,7 @@ def compute_Zh(graph, edge):
         else:
             return 1
     else:
-        return float(numerator) / float(denominator)
+        return numerator / denominator
 
 
 def readGraph(n):
