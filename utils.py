@@ -39,7 +39,7 @@ def compute_X(edge, base=100):
     a, b = edge
     assert a <= b
     if a != b:
-        return base * a + b
+        return int(base * a + b)
     else:
         return 0
 
@@ -48,18 +48,27 @@ def compute_Y(src1, src2, tgt1, tgt2):
     y1 = (compute_X(tgt1) - compute_X(tgt2))
     y2 = (compute_X(src1) - compute_X(src2))
 
-    return y1 / y2
+    return y1, y2
 
 
 def compute_Z(src, tgt):
     assert len(src) == len(tgt)
     num_edges = len(src)
-    result = 1
+    numerator = 1
+    denominator = 1
     for i in range(num_edges):
         for j in range(i + 1, num_edges):
-            result *= compute_Y(src[i], src[j], tgt[i], tgt[j])
+            num, den = compute_Y(src[i], src[j], tgt[i], tgt[j])
+            numerator *= int(num)
+            denominator *= int(den)
 
-    return result
+    if abs(numerator) == abs(denominator):
+        if numerator + denominator == 0:
+            return -1
+        else:
+            return 1
+    else:
+        return float(numerator) / float(denominator)
 
 
 def h(edge, redge):
@@ -87,12 +96,21 @@ def h(edge, redge):
 def compute_Zh(graph, edge):
     assert edge in graph
     num_edge = len(graph)
-    result = 1
+    numerator = 1
+    denominator = 1
     for i in range(num_edge):
         for j in range(i + 1, num_edge):
-            result *= compute_Y(graph[i], graph[j], h(graph[i], edge), h(graph[j], edge))
+            num, den = compute_Y(graph[i], graph[j], h(graph[i], edge), h(graph[j], edge))
+            numerator *= int(num)
+            denominator *= int(den)
 
-    return result
+    if abs(numerator) == abs(denominator):
+        if numerator + denominator == 0:
+            return -1
+        else:
+            return 1
+    else:
+        return float(numerator) / float(denominator)
 
 
 def readGraph(n):
