@@ -72,7 +72,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
 
         self.invar = defaultdict(list)
-        cores = min(self.threads, len(self.graphs))
+        cores = min(self.threads, int(len(self.graphs)/32))
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
