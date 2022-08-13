@@ -172,4 +172,4 @@ class GraphFamily:
 
     def isolated(self):
         for g in self.graphs:
-            del g.src
+            g.src = g.src.name
