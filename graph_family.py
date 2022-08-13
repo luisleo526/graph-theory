@@ -3,6 +3,7 @@ from utils import parallel_loop
 from datetime import datetime
 from multiprocessing import Process, Manager
 import random
+import pickle
 
 
 class GraphFamily:
@@ -164,6 +165,10 @@ class GraphFamily:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
                     f.write(f"{prefix + str(cnt):>8s}: {g.sG.edges}\n")
+
+    def export_to_binary(self, directory):
+        print(f"{datetime.now()}, Exporting {self.name} object to binary")
+        pickle.dump(self, open(f"{directory}/{self.name}", "wb"))
 
     def isolated(self):
         for g in self.graphs:
