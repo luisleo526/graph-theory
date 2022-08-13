@@ -4,6 +4,7 @@ from datetime import datetime
 from multiprocessing import Process, Manager
 import random
 import pickle
+from collections import defaultdict
 
 
 class GraphFamily:
@@ -37,21 +38,16 @@ class GraphFamily:
         return i, self.graphs[i].orientable, self.graphs[i].Zh, self.graphs[i].Zr, self.graphs[i].Zs
 
     def find_unique_invar(self, p, cores, return_dict):
-        start = p * int(len(self.repr_indices) / cores)
-        end = min(len(self.repr_indices), (p + 1) * int(len(self.repr_indices) / cores))
+        start = p * int(len(self.graphs) / cores)
+        end = min(len(self.graphs), (p + 1) * int(len(self.graphs) / cores))
         if p + 1 == cores:
-            end = len(self.repr_indices)
-        invar_list = set()
-        repr_list = []
+            end = len(self.graphs)
+
+        data = defaultdict(list)
         for i in range(start, end):
-            if self.graphs[self.repr_indices[i]].sG.invar not in invar_list:
-                invar_list.add(self.graphs[self.repr_indices[i]].sG.invar)
-                repr_list.append(self.repr_indices[i])
+            data[self.graphs[i].sG.invar].append(i)
 
-        return_dict[p] = repr_list
-
-    def set_repr_task(self, i):
-        return i, self.invar.index(self.graphs[i].sG.invar)
+        return_dict[p] = data
 
     def split_repr(self, p, cores, return_dict):
         start = p * int(len(self.repr) / cores)
@@ -75,43 +71,27 @@ class GraphFamily:
 
         print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
 
-        self.repr_indices = list(range(len(self.graphs)))
-        sub_repr = []
-        for _ in range(2):
-            random.shuffle(self.repr_indices)
-            cores = min(self.threads, max(1, int(len(self.repr_indices) / 128)))
-            new_indices = []
-            with Manager() as manager:
-                return_dict = manager.dict()
-                jobs = []
-                for p in range(cores):
-                    jobs.append(Process(target=self.find_unique_invar, args=(p, cores, return_dict,)))
-                for job in jobs:
-                    job.start()
-                for job in jobs:
-                    job.join()
-                for sub_list in list(return_dict.values()):
-                    if len(sub_list) > len(sub_repr):
-                        new_indices.extend(sub_repr)
-                        sub_repr = sub_list
-                    else:
-                        new_indices.extend(sub_list)
-            self.repr_indices = new_indices
+        self.invar = defaultdict(list)
+        cores = min(self.threads, len(self.graphs))
+        with Manager() as manager:
+            return_dict = manager.dict()
+            jobs = []
+            for p in range(cores):
+                jobs.append(Process(target=self.find_unique_invar, args=(p, cores, return_dict,)))
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
+            for _dict in list(return_dict.values()):
+                for key, value in _dict.items():
+                    self.invar[key].extend(value)
 
-        repr_list = [self.graphs[i] for i in sub_repr]
-        invar_list = [self.graphs[i].sG.invar for i in sub_repr]
-        for i in list(set(self.repr_indices) - set(sub_repr)):
-            if self.graphs[i].sG.invar not in invar_list:
-                invar_list.append(self.graphs[i].sG.invar)
-                repr_list.append(self.graphs[i])
-
-        self.repr = repr_list
-        self.invar = invar_list
-
-        print(f"{datetime.now()}, Setting representatives for {self.name} graphs")
-        results = parallel_loop(self.set_repr_task, len(self.graphs), self.threads)
-        for i, j in results:
-            self.graphs[i].repr = self.repr[j]
+        self.repr = []
+        for invar in self.invar:
+            self.invar[invar].sort()
+            self.repr.append(self.graphs[self.invar[invar][0]])
+            for index in self.invar[invar]:
+                self.graphs[index].repr = self.graphs[self.invar[invar][0]]
 
         print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")
         if self.name != 'A':
