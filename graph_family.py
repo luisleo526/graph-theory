@@ -78,7 +78,7 @@ class GraphFamily:
         sub_repr = []
         for _ in range(1):
             random.shuffle(self.repr_indices)
-            cores = min(self.threads, max(1, int(len(self.repr_indices) / 2)))
+            cores = min(self.threads, max(1, int(len(self.repr_indices) / 128)))
             new_indices = []
             with Manager() as manager:
                 return_dict = manager.dict()
@@ -122,7 +122,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
         self.no = []
-        cores = min(self.threads, max(1, int(len(self.repr) / 2)))
+        cores = min(self.threads, max(1, int(len(self.repr) / 32)))
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
