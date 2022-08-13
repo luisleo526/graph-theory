@@ -76,7 +76,7 @@ class GraphFamily:
 
         self.repr_indices = list(range(len(self.graphs)))
         sub_repr = []
-        for _ in range(1):
+        for _ in range(2):
             random.shuffle(self.repr_indices)
             cores = min(self.threads, max(1, int(len(self.repr_indices) / 128)))
             new_indices = []
@@ -90,9 +90,11 @@ class GraphFamily:
                 for job in jobs:
                     job.join()
                 for sub_list in list(return_dict.values()):
-                    new_indices.extend(sub_list)
                     if len(sub_list) > len(sub_repr):
+                        new_indices.extend(sub_repr)
                         sub_repr = sub_list
+                    else:
+                        new_indices.extend(sub_list)
             self.repr_indices = new_indices
 
         repr_list = [self.graphs[i] for i in sub_repr]
