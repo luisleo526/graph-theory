@@ -165,7 +165,7 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
         pickle.dump((data, data2, edges), f)
 
 
-def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
+def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.int)
@@ -210,6 +210,9 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
                 data2[i, -1] += f"#{j + 1}, "
 
     half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
+
+    with open(f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}", "wb") as f:
+        pickle.dump((half_data, data, data2), f)
 
     rows = []
     columns = []
