@@ -1,7 +1,7 @@
 import math
 from sympy.matrices import Matrix
 from sympy import symbols, LC, LM, poly
-from collections import Iterable
+from collections.abc import Iterable
 from sympy.utilities.iterables import multiset_permutations
 import sys
 import numpy as np
