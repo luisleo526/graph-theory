@@ -50,7 +50,7 @@ if __name__ == '__main__':
         tgt_graphs.set_repr()
         tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
-        rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.t, args.skip_rank)
+        rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.t, args.n, args.skip_rank)
         if not args.skip_rank:
             all_ranks.append(rank)
 
