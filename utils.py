@@ -114,15 +114,10 @@ def compute_Zh(graph, edge):
         return numerator / denominator
 
 
-def readGraph(n):
-    with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
-        lines = f.readlines()
-
+def readGraph_task(directory, lines):
     lines = list(filter(''.__ne__, [x.strip() for x in lines]))
-
     start_index = [i for i, s in enumerate(lines) if 'Graph' in s]
     end_index = [i for i, s in enumerate(lines) if 'Taillenweite' in s]
-
     _graphs = []
     for start, end in zip(start_index, end_index):
         _graphs.append(lines[start + 1:end - 1])
@@ -137,8 +132,39 @@ def readGraph(n):
                     graph.append((int(vertices[0]), int(vertices[i])))
         graphs.append(graph)
 
-    return graphs
+    with open(directory, "wb") as f:
+        pickle.dump(graphs, f)
 
+
+def readGraph(n, t):
+    with open(f"./inputs/{2 * n:02d}_3_3.asc") as f:
+        lines = f.readlines()
+    lines = lines[1:-1]
+
+    start = 0
+    data = []
+    for i in range(t):
+        end = min(start + int(len(lines) / t), len(lines) - 1)
+        while 'Ordnung' not in lines[end]:
+            end += 1
+        data.append((start, end))
+        start = end + 1
+
+    jobs = []
+    for p in range(t):
+        s, e = data[p]
+        jobs.append(Process(target=readGraph_task, args=(f"./cache/{p}_input", lines[s:e + 1])))
+    for job in jobs:
+        job.start()
+    for job in jobs:
+        job.join()
+
+    graphs = []
+    for p in range(t):
+        with open(f"./cache/{p}_input", "rb") as f:
+            graphs.extend(pickle.load(f))
+
+    return graphs
 
 def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
     data = np.zeros((m, n), dtype=np.int)

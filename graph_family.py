@@ -18,11 +18,15 @@ class GraphFamily:
         self.name = name
         self.threads = threads
         if len(args) > 0:
+            self.graphs = args
             if type(args[0]) == list:
-                for graph in args:
-                    self.graphs.append(GraphParent(graph, threads))
+                self.graphs = parallel_loop(self.find_parent, len(self.graphs), self.threads)
             else:
                 self.graphs = args
+
+        results = parallel_loop(self.find_hash, len(self.graphs), self.threads)
+        for i, hash_val in results:
+            self.graphs[i].sG.hash = hash_val
         self.graphs.sort()
 
     def __len__(self):
@@ -30,6 +34,12 @@ class GraphFamily:
 
     def __getitem__(self, item):
         return self.graphs[item]
+
+    def find_parent(self, i):
+        return GraphParent(self.graphs[i], self.threads)
+
+    def find_hash(self, i):
+        return i, self.graphs[i].sG.hash
 
     def find_invar(self, i):
         return i, self.graphs[i].sG.invar

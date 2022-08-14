@@ -32,7 +32,7 @@ if __name__ == '__main__':
         print(f"{datetime.now()}, Finished reading data")
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
-        src_graphs = GraphFamily(readGraph(args.n), threads=args.t)
+        src_graphs = GraphFamily(readGraph(args.n, args.t), threads=args.t)
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
