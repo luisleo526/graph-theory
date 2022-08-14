@@ -2,6 +2,7 @@ from multiprocessing import Process, Manager
 import numpy as np
 from numpy.linalg import matrix_rank
 from datetime import datetime
+import pickle
 
 
 def parallel_loop_task(f, n, cores, i, return_dict):
@@ -139,7 +140,7 @@ def readGraph(n):
     return graphs
 
 
-def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
+def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
     data = np.zeros((m, n), dtype=np.int)
     data2 = np.zeros((m, n + 1), dtype=object)
     edges = np.zeros((m, num_edges), dtype=np.int)
@@ -160,7 +161,8 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges, return_dict):
         data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
         edges[g.src.id, g.edge_index] += 1
 
-    return_dict[p] = (data, data2, edges)
+    with open(f"{p}_data", "wb") as f:
+        pickle.dump((data, data2, edges), f)
 
 
 def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
@@ -182,26 +184,25 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
           f"{len(src_graphs.o) + len(src_graphs.no)}x{len(tgt_graphs.o) + len(tgt_graphs.no)}")
 
     # Parallel execution
-    with Manager() as manager:
+    jobs = []
+    for p in range(cores):
+        jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs,
+                                                        len(src_graphs.o) + len(src_graphs.no),
+                                                        len(tgt_graphs.o) + len(tgt_graphs.no),
+                                                        len(src_graphs[0].sG.edges),)))
 
-        return_dict = manager.dict()
-        jobs = []
-        for p in range(cores):
-            jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs,
-                                                            len(src_graphs.o) + len(src_graphs.no),
-                                                            len(tgt_graphs.o) + len(tgt_graphs.no),
-                                                            len(src_graphs[0].sG.edges), return_dict,)))
+    for job in jobs:
+        job.start()
 
-        for job in jobs:
-            job.start()
+    for job in jobs:
+        job.join()
 
-        for job in jobs:
-            job.join()
-
-        for a, b, c in list(return_dict.values()):
-            data += a
-            data2 += b
-            edges += c
+    for p in range(cores):
+        with open(f"{p}_data", "rb") as f:
+            a, b, c = pickle.load(f)
+        data += a
+        data2 += b
+        edges += c
 
     for i in range(edges.shape[0]):
         for j in range(edges.shape[1]):

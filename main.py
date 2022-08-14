@@ -26,7 +26,8 @@ if __name__ == '__main__':
 
     if args.from_graph != "":
         print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{args.from_graph}")
-        src_graphs = pickle.load(open(f"./{args.n}_graphs/binary/{args.from_graph}", "rb"))
+        with open(f"./{args.n}_graphs/binary/{args.from_graph}", "rb") as f:
+            src_graphs = pickle.load(f)
         print(f"{datetime.now()}, Finished reading data")
     else:
         print(f"{datetime.now()}, Reading from GenReg output")

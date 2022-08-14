@@ -148,7 +148,8 @@ class GraphFamily:
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
-        pickle.dump(self, open(f"{directory}/{self.name}", "wb"))
+        with open(f"{directory}/{self.name}", "wb") as f:
+            pickle.dump(self, f)
 
     def isolated(self):
         for g in self.graphs:
