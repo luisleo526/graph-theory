@@ -72,7 +72,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Finding unique invariant for {self.name} graphs")
 
         self.invar = defaultdict(list)
-        cores = min(self.threads, int(len(self.graphs)/32))
+        cores = min(self.threads, max(1, int(len(self.graphs) / 128)))
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
@@ -105,7 +105,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
         self.no = []
-        cores = min(self.threads, max(1, int(len(self.repr) / 32)))
+        cores = min(self.threads, max(1, int(len(self.repr) / 1024)))
         with Manager() as manager:
             return_dict = manager.dict()
             jobs = []
