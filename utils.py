@@ -161,7 +161,7 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
         data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
         edges[g.src.id, g.edge_index] += 1
 
-    with open(f"{p}_data", "wb") as f:
+    with open(f"./cache/{p}_data", "wb") as f:
         pickle.dump((data, data2, edges), f)
 
 
@@ -198,7 +198,7 @@ def get_data(src_graphs, tgt_graphs, cores, skip_rank=False):
         job.join()
 
     for p in range(cores):
-        with open(f"{p}_data", "rb") as f:
+        with open(f"./cache/{p}_data", "rb") as f:
             a, b, c = pickle.load(f)
         data += a
         data2 += b

@@ -23,6 +23,7 @@ if __name__ == '__main__':
     args = parse_args()
 
     Path(f"./{args.n}_graphs/binary").mkdir(parents=True, exist_ok=True)
+    Path(f"./cache").mkdir(parents=True, exist_ok=True)
 
     if args.from_graph != "":
         print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{args.from_graph}")
