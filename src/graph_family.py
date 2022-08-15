@@ -132,7 +132,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Giving name, id for {self.name} representatives")
         for s, prefix, _list in [[0, self.name, self.o], [len(self.o), self.name + 'N', self.no]]:
             for cnt, g in enumerate(_list, 1):
-                g.name = prefix + str(cnt + s)
+                g.name = prefix + str(cnt)
                 g.id = cnt - 1 + s
 
         print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs")

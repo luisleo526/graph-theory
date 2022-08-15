@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument("-n", default=4, type=int)
     parser.add_argument("-t", default=8, type=int)
     parser.add_argument("-from_graph", default="", type=str)
+    parser.add_argument("-from_file", default="", type=str)
     parser.add_argument("-skip_rank", action='store_true')
     return parser.parse_args()
 
@@ -30,6 +31,14 @@ if __name__ == '__main__':
         with open(f"./{args.n}_graphs/binary/{args.from_graph}", "rb") as f:
             src_graphs = pickle.load(f)
         print(f"{datetime.now()}, Finished reading data")
+    elif args.fomr_file != "":
+        print(f"{datetime.now()}, Reading from ./{args.from_file}")
+        with open(args.file, "rb") as f:
+            input = pickle.load(f)
+        src_graphs = GraphFamily(input, threads=args.t)
+        for g in src_graphs:
+            g._orientable = True
+        src_graphs.set_repr()
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
         src_graphs = GraphFamily(readGraph(args.n, args.t), threads=args.t)
