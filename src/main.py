@@ -31,7 +31,7 @@ if __name__ == '__main__':
         with open(f"./{args.n}_graphs/binary/{args.from_graph}", "rb") as f:
             src_graphs = pickle.load(f)
         print(f"{datetime.now()}, Finished reading data")
-    elif args.fomr_file != "":
+    elif args.from_file != "":
         print(f"{datetime.now()}, Reading from ./{args.from_file}")
         with open(args.file, "rb") as f:
             input = pickle.load(f)
