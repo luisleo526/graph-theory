@@ -22,6 +22,9 @@ def parse_args():
 if __name__ == '__main__':
 
     args = parse_args()
+    
+    if args.file != "" :
+        args.n = args.file
 
     Path(f"./{args.n}_graphs/binary").mkdir(parents=True, exist_ok=True)
     Path(f"./cache").mkdir(parents=True, exist_ok=True)
