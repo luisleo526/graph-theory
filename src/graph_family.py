@@ -1,11 +1,10 @@
 import pickle
-import random
 from collections import defaultdict
 from datetime import datetime
 from multiprocessing import Process, Manager
 
 from graph_parent import GraphParent
-from utils import parallel_loop
+from utils import parallel_loop, dump_to_binary
 
 
 class GraphFamily:
@@ -159,8 +158,7 @@ class GraphFamily:
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
-        with open(f"{directory}/{self.name}", "wb") as f:
-            pickle.dump(self, f)
+        dump_to_binary(self, f"{directory}/{self.name}")
 
     def isolated(self):
         for g in self.graphs:

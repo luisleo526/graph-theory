@@ -1,8 +1,27 @@
 import numpy as np
 import pickle
+import os
 from datetime import datetime
 from multiprocessing import Process, Manager
 from numpy.linalg import matrix_rank
+
+
+def dump_to_binary(data, file):
+
+    uncheck = True
+
+    if os.path.exists(file):
+        os.remove(file)
+
+    while uncheck:
+        try:
+            with open(file, 'rb') as f:
+                _ = pickle.load(f)
+            uncheck = False
+        except:
+            uncheck = True
+            with open(file, 'wb') as f:
+                pickle.dump(data, f)
 
 
 def parallel_loop_task(f, n, cores, i):
@@ -10,8 +29,8 @@ def parallel_loop_task(f, n, cores, i):
     end = min(n, (i + 1) * int(n / cores))
     if i + 1 == cores:
         end = n
-    with open(f"./cache/{i}_data", "wb") as fil:
-        pickle.dump([f(j) for j in range(start, end)], fil)
+    result = [f(j) for j in range(start, end)]
+    dump_to_binary(result, f"./cache/{i}_data")
 
 
 def parallel_loop(f, n, max_cores):
@@ -30,7 +49,8 @@ def parallel_loop(f, n, max_cores):
     results = []
     for p in range(cores):
         with open(f"./cache/{p}_data", "rb") as fil:
-            results.extend(pickle.load(fil))
+            result = pickle.load(fil)
+            results.extend(result)
 
     return results
 
@@ -131,8 +151,7 @@ def readGraph_task(directory, lines):
                     graph.append((int(vertices[0]), int(vertices[i])))
         graphs.append(graph)
 
-    with open(directory, "wb") as f:
-        pickle.dump(graphs, f)
+    dump_to_binary(graphs, directory)
 
 
 def readGraph(n, t):
@@ -161,9 +180,11 @@ def readGraph(n, t):
     graphs = []
     for p in range(t):
         with open(f"./cache/{p}_input", "rb") as f:
-            graphs.extend(pickle.load(f))
+            graph = pickle.load(f)
+            graphs.extend(graph)
 
     return graphs
+
 
 def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
     data = np.zeros((m, n), dtype=np.int)
@@ -186,8 +207,7 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
         data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
         edges[g.src.id, g.edge_index] += 1
 
-    with open(f"./cache/{p}_data", "wb") as f:
-        pickle.dump((data, data2, edges), f)
+    dump_to_binary((data, data2, edges), f"./cache/{p}_data")
 
 
 def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
@@ -236,8 +256,7 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
 
     half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
 
-    with open(f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}", "wb") as f:
-        pickle.dump((half_data, data, data2), f)
+    dump_to_binary((half_data, data, data2), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
 
     rows = []
     columns = []
