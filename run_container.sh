@@ -5,6 +5,6 @@ if [ ! $( docker ps -a | grep graph | wc -l ) -gt 0 ]; then
     #    echo "RUN pip3 install openpyxl munch numpy pandas sympy" >> Dockerfile
     #    docker build -t graph .
     #fi
-    docker run --name graph -itd -v $(pwd)/src:/app luisleo52655/python3.11:1.0
+    docker run --name graph -itd -v $(pwd)/src:/app luisleo52655/python3.11:
 fi
 docker exec graph /bin/bash -c "time python3 main.py $@"
