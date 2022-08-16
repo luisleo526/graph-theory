@@ -1,9 +1,35 @@
-import numpy as np
-import pickle
+import hashlib
 import os
+import pickle
 from datetime import datetime
-from multiprocessing import Process, Manager
+from multiprocessing import Process
+
+import numpy as np
 from numpy.linalg import matrix_rank
+from sympy import symbols, poly
+from sympy.matrices import Matrix
+
+
+def compute_invar(adj):
+    invar_poly = []
+    invar_poly.append(Matrix(adj).charpoly(symbols('x')).as_expr())
+    for i in range(adj.shape[0]):
+        _adj = np.delete(np.delete(adj, i, 0), i, 1)
+        invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+    invar_coeff = []
+    for expr in invar_poly:
+        invar_coeff.append(poly(expr).all_coeffs())
+    invar = sorted(set([tuple(x) for x in invar_coeff]))
+
+    m = hashlib.md5()
+    for p in invar:
+        msg = ""
+        for x in p:
+            msg += f"{x}"
+        m.update(msg.encode())
+    invar = m.hexdigest()
+
+    return invar
 
 
 def dump_to_binary(data, file):
