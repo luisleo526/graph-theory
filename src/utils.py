@@ -1,8 +1,8 @@
-from multiprocessing import Process, Manager
 import numpy as np
-from numpy.linalg import matrix_rank
-from datetime import datetime
 import pickle
+from datetime import datetime
+from multiprocessing import Process, Manager
+from numpy.linalg import matrix_rank
 
 
 def parallel_loop_task(f, n, cores, i, return_dict):

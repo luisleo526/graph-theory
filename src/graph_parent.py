@@ -1,8 +1,9 @@
-from graph_child import GraphChild
-from utils import *
-import numpy as np
 import functools
 import math
+import numpy as np
+
+from graph_child import GraphChild
+from utils import *
 
 _sign = functools.partial(math.copysign, 1)
 

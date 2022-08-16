@@ -1,10 +1,11 @@
-from graph_parent import GraphParent
-from utils import parallel_loop
+import pickle
+import random
+from collections import defaultdict
 from datetime import datetime
 from multiprocessing import Process, Manager
-import random
-import pickle
-from collections import defaultdict
+
+from graph_parent import GraphParent
+from utils import parallel_loop
 
 
 class GraphFamily:

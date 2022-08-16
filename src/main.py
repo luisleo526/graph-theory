@@ -1,12 +1,13 @@
+import argparse
+import numpy as np
+import pandas as pd
+import pickle
+from datetime import datetime
+from munch import Munch
+from pathlib import Path
+
 from graph_family import GraphFamily
 from utils import readGraph, get_data
-from pathlib import Path
-import argparse
-import pandas as pd
-import numpy as np
-from munch import Munch
-from datetime import datetime
-import pickle
 
 
 def parse_args():
