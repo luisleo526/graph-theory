@@ -7,7 +7,6 @@ from numpy.linalg import matrix_rank
 
 
 def dump_to_binary(data, file):
-
     uncheck = True
 
     if os.path.exists(file):
@@ -15,13 +14,22 @@ def dump_to_binary(data, file):
 
     while uncheck:
         try:
-            with open(file, 'rb') as f:
-                _ = pickle.load(f)
+            _ = load_from_binary(file)
             uncheck = False
         except:
             uncheck = True
             with open(file, 'wb') as f:
                 pickle.dump(data, f)
+
+
+def load_from_binary(file, rm=False):
+    with open(file, 'rb') as f:
+        data = pickle.load(f)
+
+    if rm:
+        os.remove(file)
+
+    return data
 
 
 def parallel_loop_task(f, n, cores, i):
@@ -48,9 +56,8 @@ def parallel_loop(f, n, max_cores):
 
     results = []
     for p in range(cores):
-        with open(f"./cache/{p}_data", "rb") as fil:
-            result = pickle.load(fil)
-            results.extend(result)
+        result = load_from_binary(f"./cache/{p}_data", rm=True)
+        results.extend(result)
 
     return results
 
@@ -179,9 +186,8 @@ def readGraph(n, t):
 
     graphs = []
     for p in range(t):
-        with open(f"./cache/{p}_input", "rb") as f:
-            graph = pickle.load(f)
-            graphs.extend(graph)
+        graph = load_from_binary(f"./cache/{p}_input", rm=True)
+        graphs.extend(graph)
 
     return graphs
 
@@ -243,8 +249,7 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
         job.join()
 
     for p in range(cores):
-        with open(f"./cache/{p}_data", "rb") as f:
-            a, b, c = pickle.load(f)
+        a, b, c = load_from_binary(f"./cache/{p}_data", rm=True)
         data += a
         data2 += b
         edges += c

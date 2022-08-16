@@ -7,7 +7,7 @@ from munch import Munch
 from pathlib import Path
 
 from graph_family import GraphFamily
-from utils import readGraph, get_data
+from utils import readGraph, get_data, load_from_binary
 
 
 def parse_args():
@@ -32,14 +32,12 @@ if __name__ == '__main__':
 
     if args.from_graph != "":
         print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{args.from_graph}")
-        with open(f"./{args.n}_graphs/binary/{args.from_graph}", "rb") as f:
-            src_graphs = pickle.load(f)
+        src_graphs = load_from_binary(f"./{args.n}_graphs/binary/{args.from_graph}")
         print(f"{datetime.now()}, Finished reading data")
     elif args.file != "":
         print(f"{datetime.now()}, Reading from ./{args.file}")
-        with open(args.file, "rb") as f:
-            input = pickle.load(f)
-        src_graphs = GraphFamily(input, threads=args.t)
+        inputs = load_from_binary(args.file)
+        src_graphs = GraphFamily(inputs, threads=args.t)
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
