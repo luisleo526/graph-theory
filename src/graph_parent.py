@@ -61,8 +61,6 @@ class GraphParent:
     def orientable(self):
         if self._orientable is None:
             n = np.prod(self.sG.permutation_dim)
-            # results = parallel_loop(self.check_orientable, n, self.threads)
-            # self._orientable = not any(results)
             self._orientable = True
             for i in range(n):
                 result_is_true = self.check_orientable(i)
@@ -95,8 +93,11 @@ class GraphParent:
     def Zr(self):
         if self._Zr is None:
             n = np.prod(self.repr.sG.permutation_dim)
-            results = parallel_loop(self.find_Zr, n, self.threads)
-            zs = [x for x in results if x is not None]
+            zs = []
+            for i in range(n):
+                z = self.find_Zr(i)
+                if z is not None:
+                    zs.append(z)
             assert len(zs) > 0
             assert sum([(abs(x) - abs(zs[0])) / abs(x) for x in zs]) < 1e-10
             if abs(max(zs) - min(zs)) / abs(max(zs)) > 1e-10:
