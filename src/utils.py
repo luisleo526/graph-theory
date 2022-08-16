@@ -218,6 +218,24 @@ def readGraph(n, t):
     return graphs
 
 
+def get_index_and_value(data):
+    indices = np.nonzero(data)
+    values = data[indices]
+    indices = np.transpose(indices)
+
+    result = []
+    for (i, j), x in zip(indices, values):
+        result.append((i, j, x))
+
+    return result
+
+
+def assign_values_from_index(array, data):
+    for i, j, x in data:
+        array[i, j] += x
+    return array
+
+
 def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
     data = np.zeros((m, n), dtype=np.int)
     data2 = np.zeros((m, n + 1), dtype=object)
@@ -238,6 +256,10 @@ def get_data_task(p, n_cores, tgt_graphs, m, n, num_edges):
         data[g.src.id, g.repr.id] += g.Zall
         data2[g.src.id, g.repr.id] += f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "
         edges[g.src.id, g.edge_index] += 1
+
+    data = get_index_and_value(data)
+    data2 = get_index_and_value(data2)
+    edges = get_index_and_value(edges)
 
     dump_to_binary((data, data2, edges), f"./cache/{p}_data")
 
@@ -275,10 +297,10 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
         job.join()
 
     for p in range(cores):
-        a, b, c = load_from_binary(f"./cache/{p}_data", rm=True)
-        data += a
-        data2 += b
-        edges += c
+        _data, _data2, _edges = load_from_binary(f"./cache/{p}_data", rm=True)
+        data = assign_values_from_index(data, _data)
+        data2 = assign_values_from_index(data2, _data2)
+        edges = assign_values_from_index(edges, _edges)
 
     for i in range(edges.shape[0]):
         for j in range(edges.shape[1]):
