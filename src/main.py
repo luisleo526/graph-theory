@@ -39,6 +39,7 @@ if __name__ == '__main__':
         with open(args.file, "rb") as f:
             input = pickle.load(f)
         src_graphs = GraphFamily(input, threads=args.t)
+        print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
         src_graphs.set_repr()
