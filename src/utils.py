@@ -5,33 +5,32 @@ from multiprocessing import Process, Manager
 from numpy.linalg import matrix_rank
 
 
-def parallel_loop_task(f, n, cores, i, return_dict):
+def parallel_loop_task(f, n, cores, i):
     start = i * int(n / cores)
     end = min(n, (i + 1) * int(n / cores))
     if i + 1 == cores:
         end = n
-    return_dict[i] = [f(j) for j in range(start, end)]
+    with open(f"./cache/{i}_data", "wb") as fil:
+        pickle.dump([f(j) for j in range(start, end)], fil)
 
 
 def parallel_loop(f, n, max_cores):
     cores = min(max_cores, n)
 
-    with Manager() as manager:
+    jobs = []
+    for p in range(cores):
+        jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p,)))
 
-        return_dict = manager.dict()
-        jobs = []
-        for p in range(cores):
-            jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p, return_dict,)))
+    for job in jobs:
+        job.start()
 
-        for job in jobs:
-            job.start()
+    for job in jobs:
+        job.join()
 
-        for job in jobs:
-            job.join()
-
-        results = []
-        for _result in list(return_dict.values()):
-            results.extend(_result)
+    results = []
+    for p in range(cores):
+        with open(f"./cache/{p}_data", "rb") as fil:
+            results.extend(pickle.load(fil))
 
     return results
 
