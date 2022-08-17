@@ -84,8 +84,10 @@ if __name__ == '__main__':
                         np.where(~half.any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
         else:
             with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.txt", "w") as f:
+                f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
+                f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
                 f.write(f"Rank: {rank}\n")
-                f.write(f"# of ZeroColumns (full): {np.where(~full.any(axis=1))[0]}\n")
+                f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
                 f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}")
 
         if old_half is not None and half.size > 0:
