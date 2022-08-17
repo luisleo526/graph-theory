@@ -1,8 +1,9 @@
 import hashlib
 import os
 import pickle
+import uuid
 from datetime import datetime
-from multiprocessing import Process
+from multiprocessing import Process, Manager
 
 import numpy as np
 from numpy.linalg import matrix_rank
@@ -58,32 +59,36 @@ def load_from_binary(file, rm=False):
     return data
 
 
-def parallel_loop_task(f, n, cores, i):
+def parallel_loop_task(f, n, cores, i, return_dict):
     start = i * int(n / cores)
     end = min(n, (i + 1) * int(n / cores))
     if i + 1 == cores:
         end = n
     result = [f(j) for j in range(start, end)]
-    dump_to_binary(result, f"./cache/{i}_data")
+    filename = uuid.uuid4().hex
+    dump_to_binary(result, f"./cache/{filename}")
+    return_dict[i] = f"./cache/{filename}"
 
 
 def parallel_loop(f, n, max_cores):
     cores = min(max_cores, n)
 
-    jobs = []
-    for p in range(cores):
-        jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p,)))
+    with Manager() as manager:
+        return_dict = manager.dict()
+        jobs = []
+        for p in range(cores):
+            jobs.append(Process(target=parallel_loop_task, args=(f, n, cores, p, return_dict,)))
 
-    for job in jobs:
-        job.start()
+        for job in jobs:
+            job.start()
 
-    for job in jobs:
-        job.join()
+        for job in jobs:
+            job.join()
 
-    results = []
-    for p in range(cores):
-        result = load_from_binary(f"./cache/{p}_data", rm=True)
-        results.extend(result)
+        results = []
+        for directory in list(return_dict.values()):
+            result = load_from_binary(directory, rm=True)
+            results.extend(result)
 
     return results
 
@@ -223,7 +228,7 @@ def assign_values_from_index(array, data):
     return array
 
 
-def get_data_task(p, n_cores, tgt_graphs):
+def get_data_task(p, n_cores, tgt_graphs, return_dict):
     start = p * int(len(tgt_graphs) / n_cores)
     end = min(len(tgt_graphs), (p + 1) * int(len(tgt_graphs) / n_cores))
 
@@ -239,7 +244,9 @@ def get_data_task(p, n_cores, tgt_graphs):
         data2.append((g.src.id, g.repr.id, f"#{g.edge_index + 1}:[{g.Zh},{g.Zs},{g.Zr}], "))
         edges.append((g.src.id, g.edge_index, 1))
 
-    dump_to_binary((data, data2, edges), f"./cache/{p}_data")
+    filename = uuid.uuid4().hex
+    dump_to_binary((data, data2, edges), f"./cache/{filename}")
+    return_dict[p] = f"./cache/{filename}"
 
 
 def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
@@ -261,24 +268,23 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
           f"{len(src_graphs.o) + len(src_graphs.no)}x{len(tgt_graphs.o) + len(tgt_graphs.no)}")
 
     # Parallel execution
-    jobs = []
-    for p in range(cores):
-        jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs,
-                                                        len(src_graphs.o) + len(src_graphs.no),
-                                                        len(tgt_graphs.o) + len(tgt_graphs.no),
-                                                        len(src_graphs.o[0].sG.edges),)))
+    with Manager() as manager:
+        return_dict = manager.dict()
+        jobs = []
+        for p in range(cores):
+            jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs, return_dict,)))
 
-    for job in jobs:
-        job.start()
+        for job in jobs:
+            job.start()
 
-    for job in jobs:
-        job.join()
+        for job in jobs:
+            job.join()
 
-    for p in range(cores):
-        _data, _data2, _edges = load_from_binary(f"./cache/{p}_data", rm=True)
-        data = assign_values_from_index(data, _data)
-        data2 = assign_values_from_index(data2, _data2)
-        edges = assign_values_from_index(edges, _edges)
+        for directory in list(return_dict.values()):
+            _data, _data2, _edges = load_from_binary(directory, rm=True)
+            data = assign_values_from_index(data, _data)
+            data2 = assign_values_from_index(data2, _data2)
+            edges = assign_values_from_index(edges, _edges)
 
     for i in range(edges.shape[0]):
         for j in range(edges.shape[1]):
