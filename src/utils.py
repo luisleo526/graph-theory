@@ -34,19 +34,22 @@ def compute_invar(adj):
 
 
 def dump_to_binary(data, file):
-    uncheck = True
+    with open(file, 'wb') as f:
+        pickle.dump(data, f)
 
-    if os.path.exists(file):
-        os.remove(file)
-
-    while uncheck:
-        try:
-            _ = load_from_binary(file)
-            uncheck = False
-        except:
-            uncheck = True
-            with open(file, 'wb') as f:
-                pickle.dump(data, f)
+    # uncheck = True
+    #
+    # if os.path.exists(file):
+    #     os.remove(file)
+    #
+    # while uncheck:
+    #     try:
+    #         _ = load_from_binary(file)
+    #         uncheck = False
+    #     except:
+    #         uncheck = True
+    #         with open(file, 'wb') as f:
+    #             pickle.dump(data, f)
 
 
 def load_from_binary(file, rm=False):
@@ -221,6 +224,7 @@ def readGraph(n, t):
         graphs.extend(graph)
 
     return graphs
+
 
 def assign_values_from_index(array, data):
     for i, j, x in data:
