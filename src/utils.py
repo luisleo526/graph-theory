@@ -273,7 +273,7 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
                       len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
                      dtype=object)
 
-    edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs[0].sG.edges)), dtype=np.int)
+    edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs.o[0].sG.edges)), dtype=np.int)
 
     for i in range(data2.shape[0]):
         for j in range(data2.shape[1]):
@@ -288,7 +288,7 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
         jobs.append(Process(target=get_data_task, args=(p, cores, tgt_graphs,
                                                         len(src_graphs.o) + len(src_graphs.no),
                                                         len(tgt_graphs.o) + len(tgt_graphs.no),
-                                                        len(src_graphs[0].sG.edges),)))
+                                                        len(src_graphs.o[0].sG.edges),)))
 
     for job in jobs:
         job.start()
