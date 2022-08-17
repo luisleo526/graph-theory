@@ -152,6 +152,7 @@ class GraphFamily:
     def export_graphs(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} graphs")
         with open(f"{directory}/{self.name}_graphs.txt", "w") as f:
+            f.write(f"{len(self.o)}/{len(self.no)}\n")
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
                     f.write(f"{prefix + str(cnt):>8s}: {g.sG.edges}\n")
