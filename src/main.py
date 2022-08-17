@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument("-from_graph", default="", type=str)
     parser.add_argument("-file", default="", type=str)
     parser.add_argument("-skip_rank", action='store_true')
-    parser.add_argument("-no_excel", action='store_true')
+    parser.add_argument("-to_excel", action='store_true')
     return parser.parse_args()
 
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
         print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
 
-        if not args.no_excel:
+        if args.to_excel:
             with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
                 pd.DataFrame(data=full.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
                 pd.DataFrame(data=details.transpose(),
