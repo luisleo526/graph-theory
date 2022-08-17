@@ -10,4 +10,4 @@ fi
 if ! docker ps --format '{{.Names}}' | grep -w graph &> /dev/null; then
     docker start graph
 fi
-docker exec graph /bin/bash -c "time python3 -u main.py $@  | tee log"
+docker exec graph /bin/bash -c "time python3 -u main.py $@  > log"
