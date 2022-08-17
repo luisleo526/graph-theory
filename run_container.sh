@@ -5,7 +5,7 @@ if [ ! $( docker ps -a | grep graph | wc -l ) -gt 0 ]; then
     #    echo "RUN pip3 install openpyxl munch numpy pandas sympy" >> Dockerfile
     #    docker build -t graph .
     #fi
-    docker run --name graph -itd -v $(pwd)/src:/app luisleo52655/python3.11
+    docker run --name graph -itd -v $(pwd)/src:/app luisleo52655/python3.11 git pull origin master
 fi
 if ! docker ps --format '{{.Names}}' | grep -w graph &> /dev/null; then
     docker start graph
