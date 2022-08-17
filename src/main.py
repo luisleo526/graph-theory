@@ -89,11 +89,9 @@ if __name__ == '__main__':
         old_half = Munch()
         old_half.name = src_graphs.name + tgt_graphs.name
         old_half.data = half
-        tgt_graphs.isolated()
         tgt_graphs.export_to_binary(f"./{args.n}_graphs/binary")
         del src_graphs
         src_graphs = tgt_graphs
-        src_graphs.rm_cand()
 
     if not args.skip_rank:
         print('Ranks:', all_ranks)

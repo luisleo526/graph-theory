@@ -158,11 +158,11 @@ class GraphFamily:
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
-        dump_to_binary(self, f"{directory}/{self.name}")
-
-    def isolated(self):
         for g in self.graphs:
-            g.src = g.src.name
-
-    def rm_cand(self):
+            try:
+                g.src = g.src.name
+            except:
+                pass
+        dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
+
