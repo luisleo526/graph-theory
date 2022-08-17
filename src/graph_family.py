@@ -163,3 +163,6 @@ class GraphFamily:
     def isolated(self):
         for g in self.graphs:
             g.src = g.src.name
+
+    def rm_cand(self):
+        self.graphs = None

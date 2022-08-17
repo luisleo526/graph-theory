@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     args = parse_args()
     
-    if args.file != "" :
+    if args.file != "":
         args.n = args.file
 
     Path(f"./{args.n}_graphs/binary").mkdir(parents=True, exist_ok=True)
@@ -93,6 +93,7 @@ if __name__ == '__main__':
         tgt_graphs.export_to_binary(f"./{args.n}_graphs/binary")
         del src_graphs
         src_graphs = tgt_graphs
+        src_graphs.rm_cand()
 
     if not args.skip_rank:
         print('Ranks:', all_ranks)
