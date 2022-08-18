@@ -124,7 +124,7 @@ if __name__ == '__main__':
                         data[j].sort()
                         for i in data[j]:
                             f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
-                        f.write("-")
+                        f.write("-" + "\n")
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
