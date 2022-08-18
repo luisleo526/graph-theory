@@ -166,3 +166,10 @@ class GraphFamily:
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
+    def link(self, src_family):
+        for g in self.graphs:
+            if 'N' in g.src.name:
+                g.src = src_family.repr.no[g.src.name.index('N')+1:]
+            else:
+                g.src = src_family.repr.no[g.src.name.index(src_family.name) + 1:]
+

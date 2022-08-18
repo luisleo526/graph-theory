@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
 
+import os
 import numpy as np
 import pandas as pd
 from munch import Munch
@@ -20,6 +21,7 @@ def parse_args():
     parser.add_argument("-file", default="", type=str)
     parser.add_argument("-skip_rank", action='store_true')
     parser.add_argument("-to_excel", action='store_true')
+    parser.add_argument("-find_binary", action='store_true')
     return parser.parse_args()
 
 
@@ -60,12 +62,16 @@ if __name__ == '__main__':
     all_ranks = []
     old_half = None
     while True:
-        tgt_graphs = src_graphs.deeper_graphs()
-        if len(tgt_graphs) == 0:
-            break
 
-        tgt_graphs.set_repr()
-        tgt_graphs.export_graphs(f"./{args.n}_graphs")
+        if args.find_binary and os.path.exists(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}"):
+            tgt_graphs = load_from_binary(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
+            tgt_graphs.link(src_graphs)
+        else:
+            tgt_graphs = src_graphs.deeper_graphs()
+            if len(tgt_graphs) == 0:
+                exit()
+            tgt_graphs.set_repr()
+            tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
         rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.t, args.n, args.skip_rank)
         if not args.skip_rank:
