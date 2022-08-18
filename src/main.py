@@ -108,7 +108,7 @@ if __name__ == '__main__':
                     data[i].sort()
                     for j in data[i]:
                         f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
-                    f.write("\n")
+                    f.write("-\n")
 
                 data = defaultdict(list)
                 for i, j in np.transpose(np.nonzero(full)):
