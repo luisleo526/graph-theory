@@ -168,8 +168,7 @@ class GraphFamily:
 
     def link(self, src_family):
         for g in self.graphs:
-            if 'N' in g.src.name:
-                g.src = src_family.repr.no[g.src.name.index('N')+1:]
+            if 'N' in g.src:
+                g.src = src_family.repr.no[int(g.src[g.src.index('N') + 1:])]
             else:
-                g.src = src_family.repr.no[g.src.name.index(src_family.name) + 1:]
-
+                g.src = src_family.repr.no[int(g.src[g.src.index(src_family.name) + 1:])]
