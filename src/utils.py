@@ -15,7 +15,7 @@ from sympy.matrices import Matrix
 @njit(parallel=True)
 def mat_mult(A, B):
     assert A.shape[1] == B.shape[0]
-    res = np.zeros((A.shape[0], B.shape[1]), dtype=np.int)
+    res = np.zeros((A.shape[0], B.shape[1]), dtype=np.intc)
     for i in prange(A.shape[0]):
         for k in range(A.shape[1]):
             for j in range(B.shape[1]):
@@ -268,13 +268,13 @@ def get_data_task(p, n_cores, tgt_graphs, return_dict):
 def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
-                    dtype=np.int)
+                    dtype=np.intc)
 
     data2 = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                       len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
                      dtype=object)
 
-    edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs.o[0].sG.edges)), dtype=np.int)
+    edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs.o[0].sG.edges)), dtype=np.intc)
 
     for i in range(data2.shape[0]):
         for j in range(data2.shape[1]):
