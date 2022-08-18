@@ -1,13 +1,14 @@
 import argparse
-import numpy as np
-import pandas as pd
-from numba import set_num_threads
 from datetime import datetime
-from munch import Munch
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+from munch import Munch
+from numba import set_num_threads
+
 from graph_family import GraphFamily
-from utils import readGraph, get_data, load_from_binary
+from utils import readGraph, get_data, load_from_binary, mat_mult
 
 
 def parse_args():
@@ -24,7 +25,7 @@ def parse_args():
 if __name__ == '__main__':
 
     args = parse_args()
-    
+
     if args.file != "":
         args.n = args.file
 
@@ -91,11 +92,12 @@ if __name__ == '__main__':
                 f.write(f"Rank: {rank}\n")
                 f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
                 f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}")
+                f.write("-" * 40 + "\n")
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
                   f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...", end='')
-            assert np.all(np.matmul(old_half.data, half) == 0)
+            assert np.all(mat_mult(old_half.data, half) == 0)
             print("Pass")
 
         old_half = Munch()

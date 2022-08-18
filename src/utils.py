@@ -15,7 +15,7 @@ from sympy.matrices import Matrix
 @njit(parallel=True)
 def mat_mult(A, B):
     assert A.shape[1] == B.shape[0]
-    res = np.zeros((A.shape[0], B.shape[1]), )
+    res = np.zeros((A.shape[0], B.shape[1]), dtype=np.int)
     for i in prange(A.shape[0]):
         for k in range(A.shape[1]):
             for j in range(B.shape[1]):
