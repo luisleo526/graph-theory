@@ -4,11 +4,23 @@ import pickle
 import uuid
 from datetime import datetime
 from multiprocessing import Process, Manager
+from numba import njit, prange
 
 import numpy as np
 from numpy.linalg import matrix_rank
 from sympy import symbols, poly
 from sympy.matrices import Matrix
+
+
+@njit(parallel=True)
+def mat_mult(A, B):
+    assert A.shape[1] == B.shape[0]
+    res = np.zeros((A.shape[0], B.shape[1]), )
+    for i in prange(A.shape[0]):
+        for k in range(A.shape[1]):
+            for j in range(B.shape[1]):
+                res[i, j] += A[i, k] * B[k, j]
+    return res
 
 
 def compute_invar(adj):

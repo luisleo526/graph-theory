@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 import pandas as pd
-import pickle
+from numba import set_num_threads
 from datetime import datetime
 from munch import Munch
 from pathlib import Path
@@ -27,6 +27,8 @@ if __name__ == '__main__':
     
     if args.file != "":
         args.n = args.file
+
+    set_num_threads(args.t)
 
     Path(f"./{args.n}_graphs/binary").mkdir(parents=True, exist_ok=True)
     Path(f"./cache").mkdir(parents=True, exist_ok=True)

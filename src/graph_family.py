@@ -1,4 +1,3 @@
-import pickle
 from collections import defaultdict
 from datetime import datetime
 from multiprocessing import Process, Manager
