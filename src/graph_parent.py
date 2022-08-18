@@ -55,7 +55,7 @@ class GraphParent:
             permutation += self.sG.permutation_sets[j][indices[j]]
         fG = self.sG << permutation
 
-        return abs(compute_Z(self.sG.edges, fG.edges) + 1.0) < 1e-10 and fG == self.sG
+        return fG == self.sG and check_W(self.sG.edges, fG.edges) and compute_Z(self.sG.edges, fG.edges) == -1
 
     @property
     def orientable(self):

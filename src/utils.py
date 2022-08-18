@@ -49,20 +49,6 @@ def dump_to_binary(data, file):
     with open(file, 'wb') as f:
         pickle.dump(data, f)
 
-    # uncheck = True
-    #
-    # if os.path.exists(file):
-    #     os.remove(file)
-    #
-    # while uncheck:
-    #     try:
-    #         _ = load_from_binary(file)
-    #         uncheck = False
-    #     except:
-    #         uncheck = True
-    #         with open(file, 'wb') as f:
-    #             pickle.dump(data, f)
-
 
 def load_from_binary(file, rm=False):
     with open(file, 'rb') as f:
@@ -108,7 +94,7 @@ def parallel_loop(f, n, max_cores):
     return results
 
 
-def compute_X(edge, base=100):
+def compute_X(edge, base=101):
     a, b = edge
     assert a <= b
     if a != b:
@@ -132,16 +118,27 @@ def compute_Z(src, tgt):
     for i in range(num_edges):
         for j in range(i + 1, num_edges):
             num, den = compute_Y(src[i], src[j], tgt[i], tgt[j])
-            numerator *= int(num)
-            denominator *= int(den)
+            numerator = int(numerator * int(num))
+            denominator = int(denominator * int(den))
 
-    if abs(numerator) == abs(denominator):
-        if numerator + denominator == 0:
-            return -1
-        else:
-            return 1
+    if numerator + denominator == 0:
+        return -1
+    elif numerator == denominator:
+        return 1
     else:
         return numerator / denominator
+
+
+def check_W(src, tgt):
+    assert len(src) == len(tgt)
+    num_edges = len(src)
+    numerator = 1
+    denominator = 1
+    for i in range(num_edges):
+        numerator = int(numerator * int(compute_X(src[i])))
+        denominator = int(denominator * int(compute_X(tgt[i])))
+
+    return numerator == denominator
 
 
 def h(edge, redge):
@@ -174,14 +171,13 @@ def compute_Zh(graph, edge):
     for i in range(num_edge):
         for j in range(i + 1, num_edge):
             num, den = compute_Y(graph[i], graph[j], h(graph[i], edge), h(graph[j], edge))
-            numerator *= int(num)
-            denominator *= int(den)
+            numerator = int(numerator * int(num))
+            denominator = int(denominator * int(den))
 
-    if abs(numerator) == abs(denominator):
-        if numerator + denominator == 0:
-            return -1
-        else:
-            return 1
+    if numerator + denominator == 0:
+        return -1
+    elif numerator == denominator:
+        return 1
     else:
         return numerator / denominator
 
