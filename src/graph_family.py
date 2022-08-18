@@ -172,3 +172,4 @@ class GraphFamily:
                 g.src = src_family.no[int(g.src[g.src.index('N') + 1:]) - 1]
             else:
                 g.src = src_family.o[int(g.src[g.src.index(src_family.name) + 1:]) - 1]
+            assert g.src_edge == g.src.sG.edges[g.edge_index]
