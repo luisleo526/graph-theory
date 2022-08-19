@@ -107,13 +107,15 @@ if __name__ == '__main__':
                 f.write("-" * 40 + "\n")
                 for i in sorted(list(data.keys())):
                     data[i].sort()
-                    for j in data[i]:
+                    for j in data[i][:-1]:
                         f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
+                    f.write(f"({columns[i]}, X): {details[i, -1]}\n")
                     f.write("-" + "\n")
 
             data = defaultdict(list)
             for i, j in np.transpose(np.nonzero(details)):
-                data[j].append(i)
+                if j != details.shape[1] - 1:
+                    data[j].append(i)
             with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
                 f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
                 f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
