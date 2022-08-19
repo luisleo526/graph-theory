@@ -134,7 +134,7 @@ if __name__ == '__main__':
                         if j >= len(tgt_graphs.o):
                             tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
                         else:
-                            tgt_graphs.no[j].unbind_from_data = unbind_data[j]
+                            tgt_graphs.o[j].unbind_from_data = unbind_data[j]
                     f.write("-" + "\n")
 
             for g in tgt_graphs.repr:
