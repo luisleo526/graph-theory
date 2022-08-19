@@ -46,6 +46,9 @@ class GraphFamily:
     def find_z_and_ori(self, i):
         return i, self.graphs[i].orientable, self.graphs[i].Zh, self.graphs[i].Zr, self.graphs[i].Zs
 
+    def find_unbind(self, i):
+        return i, self.repr[i].unbind
+
     def find_unique_invar(self, p, cores, return_dict):
         start = p * int(len(self.graphs) / cores)
         end = min(len(self.graphs), (p + 1) * int(len(self.graphs) / cores))
@@ -102,14 +105,19 @@ class GraphFamily:
             for index in self.invar[invar]:
                 self.graphs[index].repr = self.graphs[self.invar[invar][0]]
 
-        print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")
         if self.name != 'A':
+            print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")
             results = parallel_loop(self.find_z_and_ori, len(self.graphs), self.threads)
             for i, ori, zh, zr, zs in results:
                 self.graphs[i]._orientable = ori
                 self.graphs[i]._Zh = zh
                 self.graphs[i]._Zr = zr
                 self.graphs[i]._Zs = zs
+
+            print(f"{datetime.now()}, Computing unbind number for {self.name} representatives")
+            results = parallel_loop(self.find_unbind, len(self.repr), self.threads)
+            for i, unbind in results:
+                self.repr[i]._unbind = unbind
 
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []

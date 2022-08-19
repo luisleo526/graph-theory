@@ -70,6 +70,8 @@ if __name__ == '__main__':
         else:
             tgt_graphs = src_graphs.deeper_graphs()
             if len(tgt_graphs) == 0:
+                if not args.skip_rank:
+                    print('Ranks:', all_ranks)
                 exit()
             tgt_graphs.set_repr()
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
@@ -117,6 +119,7 @@ if __name__ == '__main__':
             for i, j in np.transpose(np.nonzero(details)):
                 if j != details.shape[1] - 1:
                     data[j].append(i)
+            unbind_data = np.sum(details.T[:-1] != "", axis=1)
             with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
                 f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
                 f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
@@ -128,7 +131,16 @@ if __name__ == '__main__':
                     data[j].sort()
                     for i in data[j]:
                         f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
+                        if j >= len(tgt_graphs.o):
+                            tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
+                        else:
+                            tgt_graphs.no[j].unbind_from_data = unbind_data[j]
                     f.write("-" + "\n")
+
+            for g in tgt_graphs.repr:
+                if g.unbind != g.unbind_from_data:
+                    print("Failed.")
+                    break
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
@@ -142,6 +154,3 @@ if __name__ == '__main__':
         tgt_graphs.export_to_binary(f"./{args.n}_graphs/binary")
         del src_graphs
         src_graphs = tgt_graphs
-
-    if not args.skip_rank:
-        print('Ranks:', all_ranks)

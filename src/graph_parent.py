@@ -1,6 +1,8 @@
 import functools
 import math
 import numpy as np
+import itertools
+from collections import defaultdict
 
 from graph_child import GraphChild
 from utils import *
@@ -15,6 +17,8 @@ def sign(x):
 class GraphParent:
 
     def __init__(self, edges, threads=4, src=None, src_edge=None, edge_index=None):
+        self._unbind = None
+        self.unbind_from_data = None
         self._er_sets = None
         self._Zall = None
         self._Zh = None
@@ -32,7 +36,6 @@ class GraphParent:
         self.edge_index = edge_index
         self.threads = threads
 
-        self.is_repr = False
         self.repr = None
         self.name = None
 
@@ -134,3 +137,28 @@ class GraphParent:
                 if _graph.G.is_valid:
                     self._er_sets.append(_graph)
         return self._er_sets
+
+    @property
+    def unbind(self):
+        if self._unbind is None:
+            knots = np.where(np.sum(self.sG.adj, axis=1) > 3)[0]
+            _adj = np.copy(self.sG.adj)
+            unique = defaultdict(list)
+            for knot in knots:
+                indices = np.where(_adj[knot] == 1)[0]
+                adj = np.copy(_adj)
+                adj[knot] = 0
+                adj[:, knot] = 0
+                _expand_adj = np.pad(adj, [(0, 1), (0, 1)], mode='constant', constant_values=0)
+                _expand_adj[knot, -1] = 1
+                _expand_adj[-1, knot] = 1
+                for k in range(int(np.floor(len(indices) - 4) / 2) + 1):
+                    for l1 in list(itertools.combinations(indices, 2 + k)):
+                        l2 = [x for x in indices if x not in list(l1)]
+                        for a, b in [(knot, -1), (-1, knot)]:
+                            expand_adj = np.copy(_expand_adj)
+                            for loc, index in [[a, list(l1)], [b, l2]]:
+                                expand_adj[loc, index] = expand_adj[index, loc] = 1
+                            unique[compute_invar(expand_adj)].append(1)
+            self._unbind = len(list(unique.keys()))
+        return self._unbind
