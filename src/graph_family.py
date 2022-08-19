@@ -26,6 +26,7 @@ class GraphFamily:
         results = parallel_loop(self.find_hash, len(self.graphs), self.threads)
         for i, hash_val in results:
             self.graphs[i].sG.hash = hash_val
+        print(f"{datetime.now()}, Sorting {self.name} graphs")
         self.graphs = merge_sort_parallel(self.graphs)
 
     def __len__(self):
