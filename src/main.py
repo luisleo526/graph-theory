@@ -151,8 +151,10 @@ if __name__ == '__main__':
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
                   f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...", end='')
-            assert np.all(mat_mult(old_half.data, half) == 0)
-            print("Pass")
+            if np.all(mat_mult(old_half.data, half) == 0):
+                print("Pass")
+            else:
+                print("Failed.")
 
         old_half = Munch()
         old_half.name = src_graphs.name + tgt_graphs.name
