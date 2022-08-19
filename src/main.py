@@ -1,9 +1,9 @@
 import argparse
+import os
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from collections import defaultdict
 
-import os
 import numpy as np
 import pandas as pd
 from munch import Munch
@@ -137,10 +137,16 @@ if __name__ == '__main__':
                             tgt_graphs.o[j].unbind_from_data = unbind_data[j]
                     f.write("-" + "\n")
 
+            print(f"{datetime.now()}, Checking unbind number for {old_half.name} graphs...", end='')
+            checked = True
             for g in tgt_graphs.repr:
                 if g.unbind != g.unbind_from_data:
-                    print("Failed.")
+                    checked = False
                     break
+            if checked:
+                print("Pass")
+            else:
+                print("Failed.")
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "

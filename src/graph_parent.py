@@ -1,7 +1,6 @@
 import functools
-import math
-import numpy as np
 import itertools
+import math
 from collections import defaultdict
 
 from graph_child import GraphChild

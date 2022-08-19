@@ -1,8 +1,9 @@
 import hashlib
 import math
-import numpy as np
 import sys
 from collections.abc import Iterable
+
+import numpy as np
 from sympy import symbols, LC, LM, poly
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import multiset_permutations
