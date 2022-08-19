@@ -3,7 +3,7 @@ from datetime import datetime
 from multiprocessing import Process, Manager
 
 from graph_parent import GraphParent
-from utils import parallel_loop, dump_to_binary
+from utils import parallel_loop, dump_to_binary, merge_sort_parallel
 
 
 class GraphFamily:
@@ -26,7 +26,7 @@ class GraphFamily:
         results = parallel_loop(self.find_hash, len(self.graphs), self.threads)
         for i, hash_val in results:
             self.graphs[i].sG.hash = hash_val
-        self.graphs.sort()
+        self.graphs = merge_sort_parallel(self.graphs)
 
     def __len__(self):
         return len(self.graphs)

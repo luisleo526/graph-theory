@@ -1,7 +1,11 @@
 import hashlib
+import itertools
+import math
+import multiprocessing
 import os
 import pickle
 import uuid
+from collections import defaultdict
 from datetime import datetime
 from multiprocessing import Process, Manager
 
@@ -10,6 +14,48 @@ from numba import njit, prange
 from numpy.linalg import matrix_rank
 from sympy import symbols, poly
 from sympy.matrices import Matrix
+
+
+def merge(*args):
+    left, right = args[0] if len(args) == 1 else args
+    left_length, right_length = len(left), len(right)
+    left_index, right_index = 0, 0
+    merged = []
+    while left_index < left_length and right_index < right_length:
+        if left[left_index] <= right[right_index]:
+            merged.append(left[left_index])
+            left_index += 1
+        else:
+            merged.append(right[right_index])
+            right_index += 1
+    if left_index == left_length:
+        merged.extend(right[right_index:])
+    else:
+        merged.extend(left[left_index:])
+    return merged
+
+
+def merge_sort(data):
+    length = len(data)
+    if length <= 1:
+        return data
+    middle = int(length / 2)
+    left = merge_sort(data[:middle])
+    right = merge_sort(data[middle:])
+    return merge(left, right)
+
+
+def merge_sort_parallel(data):
+    processes = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(processes=processes)
+    size = int(math.ceil(float(len(data)) / processes))
+    data = [data[i * size:(i + 1) * size] for i in range(processes)]
+    data = pool.map(merge_sort, data)
+    while len(data) > 1:
+        extra = data.pop() if len(data) % 2 == 1 else None
+        data = [(data[i], data[i + 1]) for i in range(0, len(data), 2)]
+        data = pool.map(merge, data) + ([extra] if extra else [])
+    return data[0]
 
 
 @njit(parallel=True)
@@ -43,6 +89,29 @@ def compute_invar(adj):
     invar = m.hexdigest()
 
     return invar
+
+
+def find_unbind_number(adj):
+    knots = np.where(np.sum(adj, axis=1) > 3)[0]
+    _adj = np.copy(adj)
+    unique = defaultdict(list)
+    for knot in knots:
+        indices = np.where(_adj[knot] == 1)[0]
+        adj = np.copy(_adj)
+        adj[knot] = 0
+        adj[:, knot] = 0
+        _expand_adj = np.pad(adj, [(0, 1), (0, 1)], mode='constant', constant_values=0)
+        _expand_adj[knot, -1] = 1
+        _expand_adj[-1, knot] = 1
+        for k in range(int(np.floor(len(indices) - 4) / 2) + 1):
+            for l1 in list(itertools.combinations(indices, 2 + k)):
+                l2 = [x for x in indices if x not in list(l1)]
+                for a, b in [(knot, -1), (-1, knot)]:
+                    expand_adj = np.copy(_expand_adj)
+                    for loc, index in [[a, list(l1)], [b, l2]]:
+                        expand_adj[loc, index] = expand_adj[index, loc] = 1
+                    unique[compute_invar(expand_adj)].append(1)
+    return len(list(unique.keys()))
 
 
 def dump_to_binary(data, file):
