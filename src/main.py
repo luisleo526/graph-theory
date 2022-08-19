@@ -94,8 +94,9 @@ if __name__ == '__main__':
                     pd.DataFrame(data={'Column ID': [x + 1 for x in list(
                         np.where(~half.any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
         else:
+
             data = defaultdict(list)
-            for i, j in np.transpose(np.nonzero(full)):
+            for i, j in np.transpose(np.nonzero(details)):
                 data[i].append(j)
             with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.txt", "w") as f:
                 f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
@@ -110,21 +111,21 @@ if __name__ == '__main__':
                         f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
                     f.write("-" + "\n")
 
-                data = defaultdict(list)
-                for i, j in np.transpose(np.nonzero(full)):
-                    data[j].append(i)
-                with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
-                    f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
-                    f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
-                    f.write(f"Rank: {rank}\n")
-                    f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
-                    f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}\n")
-                    f.write("-" * 40 + "\n")
-                    for j in sorted(list(data.keys())):
-                        data[j].sort()
-                        for i in data[j]:
-                            f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
-                        f.write("-" + "\n")
+            data = defaultdict(list)
+            for i, j in np.transpose(np.nonzero(details)):
+                data[j].append(i)
+            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
+                f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
+                f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
+                f.write(f"Rank: {rank}\n")
+                f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
+                f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}\n")
+                f.write("-" * 40 + "\n")
+                for j in sorted(list(data.keys())):
+                    data[j].sort()
+                    for i in data[j]:
+                        f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
+                    f.write("-" + "\n")
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
