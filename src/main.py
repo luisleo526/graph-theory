@@ -137,7 +137,7 @@ if __name__ == '__main__':
                             tgt_graphs.o[j].unbind_from_data = unbind_data[j]
                     f.write("-" + "\n")
 
-            print(f"{datetime.now()}, Checking unbind number for {old_half.name} graphs...", end='')
+            print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...", end='')
             checked = True
             for g in tgt_graphs.repr:
                 if g.unbind != g.unbind_from_data:
