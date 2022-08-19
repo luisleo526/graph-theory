@@ -94,7 +94,6 @@ if __name__ == '__main__':
                     pd.DataFrame(data={'Column ID': [x + 1 for x in list(
                         np.where(~half.any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
         else:
-
             data = defaultdict(list)
             for i, j in np.transpose(np.nonzero(details)):
                 data[i].append(j)
@@ -107,9 +106,11 @@ if __name__ == '__main__':
                 f.write("-" * 40 + "\n")
                 for i in sorted(list(data.keys())):
                     data[i].sort()
-                    for j in data[i][:-1]:
-                        f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
-                    f.write(f"({columns[i]}, X): {details[i, -1]}\n")
+                    for j in data[i]:
+                        if j != details.shape[1] - 1:
+                            f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
+                        else:
+                            f.write(f"({columns[i]}, X): {details[i, j]}\n")
                     f.write("-" + "\n")
 
             data = defaultdict(list)
