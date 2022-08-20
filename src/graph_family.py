@@ -3,7 +3,7 @@ from datetime import datetime
 from multiprocessing import Process, Manager
 
 from graph_parent import GraphParent
-from utils import parallel_loop, dump_to_binary, merge_sort_parallel
+from utils import parallel_loop, dump_to_binary
 
 
 class GraphFamily:
