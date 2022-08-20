@@ -49,6 +49,7 @@ if __name__ == '__main__':
         for g in src_graphs:
             g._orientable = True
             g.repr = g
+        src_graphs.repr = src_graphs.graphs
         src_graphs.group_repr()
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
@@ -57,6 +58,7 @@ if __name__ == '__main__':
         for g in src_graphs:
             g._orientable = True
             g.repr = g
+        src_graphs.repr = src_graphs.graphs
         src_graphs.group_repr()
         src_graphs.export_graphs(f"./{args.n}_graphs")
         src_graphs.export_to_binary(f"./{args.n}_graphs/binary")
