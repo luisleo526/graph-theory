@@ -121,6 +121,10 @@ class GraphFamily:
             for i, unbind in results:
                 self.repr[i]._unbind = unbind
 
+        self.group_repr()
+
+    def group_repr(self):
+
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
         self.no = []

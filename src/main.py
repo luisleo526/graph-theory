@@ -48,14 +48,16 @@ if __name__ == '__main__':
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
-        src_graphs.set_repr()
+            g.repr = g
+        src_graphs.group_repr()
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
         src_graphs = GraphFamily(readGraph(args.n, args.t), threads=args.t)
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
-        src_graphs.set_repr()
+            g.repr = g
+        src_graphs.group_repr()
         src_graphs.export_graphs(f"./{args.n}_graphs")
         src_graphs.export_to_binary(f"./{args.n}_graphs/binary")
 
@@ -129,12 +131,18 @@ if __name__ == '__main__':
                 f.write("-" * 40 + "\n")
                 for j in sorted(list(data.keys())):
                     data[j].sort()
+                    if j >= len(tgt_graphs.o):
+                        tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
+                        msg = f"{rows[j]} unbind numbers (data, computed): (" \
+                              f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data}," \
+                              f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind})"
+                    else:
+                        tgt_graphs.o[j].unbind_from_data = unbind_data[j]
+                        msg = f"{rows[j]} unbind numbers (data, computed): ({tgt_graphs.o[j].unbind_from_data}," \
+                              f"{tgt_graphs.o[j].unbind})"
                     for i in data[j]:
                         f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
-                        if j >= len(tgt_graphs.o):
-                            tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
-                        else:
-                            tgt_graphs.o[j].unbind_from_data = unbind_data[j]
+                    f.write(f"{msg}\n")
                     f.write("-" + "\n")
 
             print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...", end='')
