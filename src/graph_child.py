@@ -123,7 +123,7 @@ class GraphChild:
             invar_coeff = []
             for expr in self.invar_poly:
                 invar_coeff.append(poly(expr).all_coeffs())
-            self._invar = sorted(set([tuple(x) for x in invar_coeff]))
+            self._invar = sorted([tuple(x) for x in invar_coeff])
             m = hashlib.md5()
             for p in self._invar:
                 msg = ""

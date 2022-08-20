@@ -78,7 +78,7 @@ def compute_invar(adj):
     invar_coeff = []
     for expr in invar_poly:
         invar_coeff.append(poly(expr).all_coeffs())
-    invar = sorted(set([tuple(x) for x in invar_coeff]))
+    invar = sorted([tuple(x) for x in invar_coeff])
 
     m = hashlib.md5()
     for p in invar:
