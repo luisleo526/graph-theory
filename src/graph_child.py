@@ -7,7 +7,7 @@ from sympy import symbols, LC, LM
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import multiset_permutations
 
-from utils import find_adj_invar_coeffs
+from utils import hash_invar
 
 
 def flatten(lis):
@@ -121,7 +121,7 @@ class GraphChild:
     @property
     def invar(self):
         if self._invar is None:
-            self._invar = find_adj_invar_coeffs(self.adj)
+            self._invar = hash_invar(self.adj)
         return self._invar
 
     @property
