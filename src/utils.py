@@ -14,7 +14,7 @@ from sympy import symbols, poly
 from sympy.matrices import Matrix
 
 
-def mappings(l1, l2):
+def mappings_iterator(l1, l2):
     n = len(l1)
     for l in itertools.permutations(l2, n):
         yield {l1[i]: l[i] for i in range(n)}
