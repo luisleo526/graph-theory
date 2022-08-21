@@ -1,5 +1,4 @@
 import itertools
-import math
 import sys
 from collections.abc import Iterable
 
@@ -160,5 +159,5 @@ class GraphChild:
     @property
     def permutation_sets(self):
         return map(
-            lambda indices: {a: b for a, b in zip([y for x in self.stdf for y in x], [y for x in indices for y in x])},
+            lambda indices: {a: b for a, b in zip(list(flatten(self.stdf)), list(flatten(indices)))},
             itertools.product(*[itertools.permutations(x) for x in self.stdf]))
