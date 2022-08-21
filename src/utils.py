@@ -50,7 +50,7 @@ def hash_invar(adj):
 
 
 def hash_tuples(tuples):
-    m = hashlib.md5()
+    m = hashlib.sha256()
     for _tuple in tuples:
         msg = ""
         for x in _tuple:

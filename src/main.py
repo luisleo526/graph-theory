@@ -48,18 +48,14 @@ if __name__ == '__main__':
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
-            g.repr = g
-        src_graphs.repr = src_graphs.graphs
-        src_graphs.group_repr()
+        src_graphs.set_repr()
     else:
         print(f"{datetime.now()}, Reading from GenReg output")
         src_graphs = GraphFamily(readGraph(args.n, args.t), threads=args.t)
         print(f"{datetime.now()}, Finished reading data")
         for g in src_graphs:
             g._orientable = True
-            g.repr = g
-        src_graphs.repr = src_graphs.graphs
-        src_graphs.group_repr()
+        src_graphs.set_repr()
         src_graphs.export_graphs(f"./{args.n}_graphs")
         src_graphs.export_to_binary(f"./{args.n}_graphs/binary")
 
@@ -147,7 +143,7 @@ if __name__ == '__main__':
                     f.write(f"{msg}\n")
                     f.write("-" + "\n")
 
-            print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...", end='')
+            print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
             checked = True
             for g in tgt_graphs.repr:
                 if g.unbind != g.unbind_from_data:
@@ -160,7 +156,7 @@ if __name__ == '__main__':
 
         if old_half is not None and half.size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
-                  f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...", end='')
+                  f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...")
             if np.all(mat_mult(old_half.data, half) == 0):
                 print("# Pass")
             else:

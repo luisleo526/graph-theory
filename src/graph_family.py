@@ -148,7 +148,8 @@ class GraphFamily:
                 g.name = prefix + str(cnt)
                 g.id = cnt - 1 + s
 
-        print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs")
+        print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs "
+              f"({len(self.repr) / len(self.graphs) * 100:.2f}%)")
 
     def find_deeper_graphs(self, i):
         return self.repr[i].er_sets
