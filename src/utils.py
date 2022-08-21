@@ -14,6 +14,12 @@ from sympy import symbols, poly
 from sympy.matrices import Matrix
 
 
+def mappings(l1, l2):
+    n = len(l1)
+    for l in itertools.permutations(l2, n):
+        yield {l1[i]: l[i] for i in range(n)}
+
+
 @njit(parallel=True)
 def mat_mult(A, B):
     assert A.shape[1] == B.shape[0]
