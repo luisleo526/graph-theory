@@ -17,7 +17,12 @@ from sympy.matrices import Matrix
 def mappings_iterator(l1, l2):
     n = len(l1)
     for l in itertools.permutations(l2, n):
-        yield {l1[i]: l[i] for i in range(n)}
+        yield [(l1[i], l[i]) for i in range(n)]
+
+
+def map_all(l1s, l2s):
+    return map(lambda a: [y for x in a for y in x],
+               itertools.product(*[mappings_iterator(l1, l2) for l1, l2 in zip(l1s, l2s)]))
 
 
 @njit(parallel=True)

@@ -63,13 +63,13 @@ class GraphChild:
 
     def __lshift__(self, f):
 
-        tgt_index = list(flatten(f))
-        src_index = list(flatten(self.stdf))
-        mapping = dict(zip(src_index, tgt_index))
+        # tgt_index = list(flatten(f))
+        # src_index = list(flatten(self.stdf))
+        # mapping = dict(zip(src_index, tgt_index))
 
         tgt_graph = []
         for a, b in self.edges:
-            tgt_graph.append((mapping[a], mapping[b]))
+            tgt_graph.append((f[a], f[b]))
 
         new_graph = GraphChild(tgt_graph)
 
