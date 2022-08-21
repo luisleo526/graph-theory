@@ -25,7 +25,6 @@ class GraphParent:
         self.G = GraphChild(edges)
         self.G.edges = sorted(self.G.edges)
 
-        # self.sG = self.G << [x for x in range(1, self.G.n + 1)]
         self.sG = self.G << {y: x for x, y in enumerate(list(flatten(self.G.stdf)), 1)}
         self.sG.edges = sorted(self.sG.edges)
 
@@ -50,29 +49,15 @@ class GraphParent:
         return hash(self.sG) >= hash(other.sG)
 
     def not_orientable(self, f):
-        # permutation = []
-        # indices = np.unravel_index(i, self.sG.permutation_dim)
-        # for j in range(len(self.sG.permutation_sets)):
-        #     permutation += self.sG.permutation_sets[j][indices[j]]
-        # fG = self.sG << permutation
         fG = self.sG << f
         return fG == self.sG and check_W(self.sG.edges, fG.edges) and compute_Z(self.sG.edges, fG.edges) == -1
 
     @property
     def orientable(self):
         if self._orientable is None:
-            # n = np.prod(self.sG.permutation_dim)
-            # self._orientable = True
-            # for i in range(n):
-            #     result_is_true = self.check_orientable(i)
-            #     if result_is_true:
-            #         self._orientable = False
-            #         break
-            # self.sG._permutation_sets = None
-            stdf = [y for x in self.sG.stdf for y in x]
-            for indices in map(lambda l: [y for x in l for y in x],
-                               itertools.product(*[itertools.permutations(x) for x in self.sG.stdf])):
-                if self.not_orientable({x: y for x, y in zip(stdf, indices)}):
+            self._orientable = True
+            for f in self.sG.permutation_sets:
+                if self.not_orientable(f):
                     self._orientable = False
                     break
         return self._orientable
@@ -80,17 +65,11 @@ class GraphParent:
     @property
     def Zs(self):
         if self._Zs is None:
-            # sG = self.G << [x for x in range(1, self.G.n + 1)]
             sG = self.G << {y: x for x, y in enumerate(list(flatten(self.G.stdf)), 1)}
             self._Zs = sign(compute_Z(self.G.edges, sG.edges))
         return sign(self._Zs)
 
     def find_Zr(self, f):
-        # permutation = []
-        # indices = np.unravel_index(i, self.repr.sG.permutation_dim)
-        # for j in range(len(self.repr.sG.permutation_sets)):
-        #     permutation += self.repr.sG.permutation_sets[j][indices[j]]
-        # fG = self.repr.sG << permutation
         fG = self.repr.sG << f
         if fG == self.sG:
             return compute_Z(self.repr.sG.edges, fG.edges)
@@ -100,23 +79,14 @@ class GraphParent:
     @property
     def Zr(self):
         if self._Zr is None:
-            # n = np.prod(self.repr.sG.permutation_dim)
             zs = []
-            # for i in range(n):
-            #     z = self.find_Zr(i)
-            #     if z is not None:
-            #         zs.append(z)
-            stdf = [y for x in self.repr.sG.stdf for y in x]
-            for indices in map(lambda l: [y for x in l for y in x],
-                               itertools.product(*[itertools.permutations(x) for x in self.repr.sG.stdf])):
-                z = self.find_Zr({x: y for x, y in zip(stdf, indices)})
+            for f in self.repr.sG.permutation_sets:
+                z = self.find_Zr(f)
                 if z is not None:
                     zs.append(z)
             assert len(zs) > 0
             assert sum([(abs(x) - abs(zs[0])) / abs(x) for x in zs]) < 1e-10
             if abs(max(zs) - min(zs)) / abs(max(zs)) > 1e-10:
-                pm = u"\u00B1"
-                # self._Zr = f"{pm}{abs(max(zs))}"
                 self._Zr = 0
             else:
                 self._Zr = sign(zs[0])

@@ -1,3 +1,4 @@
+import itertools
 import math
 import sys
 from collections.abc import Iterable
@@ -5,7 +6,6 @@ from collections.abc import Iterable
 import numpy as np
 from sympy import symbols, LC, LM
 from sympy.matrices import Matrix
-from sympy.utilities.iterables import multiset_permutations
 
 from utils import hash_invar
 
@@ -159,12 +159,6 @@ class GraphChild:
 
     @property
     def permutation_sets(self):
-        if self._permutation_sets is None:
-            self._permutation_sets = []
-            for index_set in self.stdf:
-                self._permutation_sets.append(list(multiset_permutations(index_set)))
-        return self._permutation_sets
-
-    @property
-    def permutation_dim(self):
-        return [math.factorial(len(x)) for x in self.stdf]
+        return map(
+            lambda indices: {a: b for a, b in zip([y for x in self.stdf for y in x], [y for x in indices for y in x])},
+            itertools.product(*[itertools.permutations(x) for x in self.stdf]))
