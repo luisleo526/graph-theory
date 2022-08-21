@@ -1,12 +1,13 @@
-import hashlib
 import math
 import sys
 from collections.abc import Iterable
 
 import numpy as np
-from sympy import symbols, LC, LM, poly
+from sympy import symbols, LC, LM
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import multiset_permutations
+
+from utils import find_adj_invar_coeffs
 
 
 def flatten(lis):
@@ -120,17 +121,7 @@ class GraphChild:
     @property
     def invar(self):
         if self._invar is None:
-            invar_coeff = []
-            for expr in self.invar_poly:
-                invar_coeff.append(poly(expr).all_coeffs())
-            self._invar = sorted([tuple(x) for x in invar_coeff])
-            m = hashlib.md5()
-            for p in self._invar:
-                msg = ""
-                for x in p:
-                    msg += f"{x}"
-                m.update(msg.encode())
-            self._invar = m.hexdigest()
+            self._invar = find_adj_invar_coeffs(self.adj)
         return self._invar
 
     @property

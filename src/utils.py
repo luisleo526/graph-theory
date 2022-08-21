@@ -1,7 +1,5 @@
 import hashlib
 import itertools
-import math
-import multiprocessing
 import os
 import pickle
 import uuid
@@ -27,48 +25,38 @@ def mat_mult(A, B):
     return res
 
 
-def hash_invar_set(adj):
+def find_adj_invar_coeffs(adj):
     invar_poly = []
     invar_poly.append(Matrix(adj).charpoly(symbols('x')).as_expr())
     for i in range(adj.shape[0]):
         _adj = np.delete(np.delete(adj, i, 0), i, 1)
         invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+    # invariant extension - ** start
+    adj_triu = np.triu(adj)
+    for i, j in np.transpose(np.nonzero(adj_triu)):
+        _adj = np.copy(adj_triu)
+        _adj[i, j] = 0
+        _adj = _adj + _adj.T
+        invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
+    # invariant extension - ** end
     invar_coeff = []
     for expr in invar_poly:
         invar_coeff.append(poly(expr).all_coeffs())
-    invar = sorted(set([tuple(x) for x in invar_coeff]))
-
-    m = hashlib.md5()
-    for p in invar:
-        msg = ""
-        for x in p:
-            msg += f"{x}"
-        m.update(msg.encode())
-    invar = m.hexdigest()
-
-    return invar
+    return [tuple(x) for x in invar_coeff]
 
 
 def hash_invar(adj):
-    invar_poly = []
-    invar_poly.append(Matrix(adj).charpoly(symbols('x')).as_expr())
-    for i in range(adj.shape[0]):
-        _adj = np.delete(np.delete(adj, i, 0), i, 1)
-        invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
-    invar_coeff = []
-    for expr in invar_poly:
-        invar_coeff.append(poly(expr).all_coeffs())
-    invar = sorted([tuple(x) for x in invar_coeff])
+    return hash_tuples(sorted(find_adj_invar_coeffs(adj)))
 
+
+def hash_tuples(tuples):
     m = hashlib.md5()
-    for p in invar:
+    for _tuple in tuples:
         msg = ""
-        for x in p:
+        for x in _tuple:
             msg += f"{x}"
         m.update(msg.encode())
-    invar = m.hexdigest()
-
-    return invar
+    return m.hexdigest()
 
 
 def find_unbind_number(adj):
