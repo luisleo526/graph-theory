@@ -198,12 +198,12 @@ class GraphFamily:
                     f.write(f"{prefix + str(cnt):>8s}: {g.sG.edges}\n")
 
         with open(f"{directory}/{self.name}_graphs_tri.txt", "w") as f:
-            f.write(f"Number of graphs with triangles: {len(self.tri)}")
+            f.write(f"Number of graphs with triangles: {len(self.tri)}\n")
             for g in self.tri:
                 f.write(f"{g.name:>8s}: {g.sG.edges}\n")
 
         with open(f"{directory}/{self.name}_graphs_no_tri.txt", "w") as f:
-            f.write(f"Number of graphs without triangles: {len(self.notri)}")
+            f.write(f"Number of graphs without triangles: {len(self.notri)}\n")
             for g in self.notri:
                 f.write(f"{g.name:>8s}: {g.sG.edges}\n")
 
