@@ -122,10 +122,8 @@ class GraphChild:
     @property
     def has_triangle(self):
         if self._has_triangle is None:
-            indices = np.where(np.sum(self.adj, axis=1) > 3)[0]
-            topology = (np.sum(self.adj[indices]) - 3 * len(indices) + self.adj.shape[0]) + 2
             a3 = abs(Poly(self.invar_poly[0]).all_coeffs()[3])
-            self._has_triangle = a3 < topology + 1 and a3 % 2 == 0
+            self._has_triangle = a3 % 2 == 0
         return self._has_triangle
 
     @property

@@ -353,7 +353,7 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
 
     half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
 
-    dump_to_binary((half_data, data, data2), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
+    dump_to_binary((data, data2), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
 
     rows = []
     columns = []
