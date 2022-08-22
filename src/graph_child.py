@@ -123,7 +123,7 @@ class GraphChild:
     def has_triangle(self):
         if self._has_triangle is None:
             a3 = abs(Poly(self.invar_poly[0]).all_coeffs()[3])
-            self._has_triangle = a3 % 2 == 0
+            self._has_triangle = a3 % 2 == 0 and a3 != 0
         return self._has_triangle
 
     @property
