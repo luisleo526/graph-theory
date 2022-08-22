@@ -125,7 +125,7 @@ class GraphChild:
             indices = np.where(np.sum(self.adj, axis=1) > 3)[0]
             topology = (np.sum(self.adj[indices]) - 3 * len(indices) + self.adj.shape[0]) + 2
             self._has_triangle = abs(Poly(self.invar_poly[0]).coeffs()[2]) < topology + 1
-        return self.has_triangle
+        return self._has_triangle
 
     @property
     def invar(self):
