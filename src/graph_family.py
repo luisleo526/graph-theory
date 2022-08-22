@@ -111,11 +111,11 @@ class GraphFamily:
         check_all = True
         for hash_invar in self.invar:
             if len(self.invar[hash_invar]) > 1:
-                for i in range(1, len(self.invar[hash_invar])):
+                for i in self.invar[hash_invar][1:]:
                     checked = False
-                    for f in map_all(self.invar[hash_invar][0].sG.stdf, self.invar[hash_invar][i].sG.stdf):
-                        fG = self.invar[hash_invar][0].sG << f
-                        if fG == self.invar[hash_invar][i].sG:
+                    for f in map_all(self.graphs[self.invar[hash_invar][0]].sG.stdf, self.graphs[i].sG.stdf):
+                        fG = self.graphs[self.invar[hash_invar][0]].sG << f
+                        if fG == self.graphs[i].sG:
                             checked = True
                             break
                     if not checked:
