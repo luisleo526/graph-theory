@@ -3,7 +3,7 @@ from datetime import datetime
 from multiprocessing import Process, Manager
 
 from graph_parent import GraphParent
-from utils import parallel_loop, dump_to_binary
+from utils import parallel_loop, dump_to_binary, map_all
 
 
 class GraphFamily:
@@ -106,6 +106,24 @@ class GraphFamily:
             self.repr.append(self.graphs[self.invar[invar][0]])
             for index in self.invar[invar]:
                 self.graphs[index].repr = self.graphs[self.invar[invar][0]]
+
+        print(f"{datetime.now()}, Checking existence of mappings for {self.name} representatives...")
+        check_all = True
+        for hash_invar in self.invar:
+            if len(self.invar[hash_invar]) > 1:
+                for i in range(1, len(self.invar[hash_invar])):
+                    checked = False
+                    for f in map_all(self.invar[hash_invar][0].sG.stdf, self.invar[hash_invar][i].sG.stdf):
+                        fG = self.invar[hash_invar][0].sG << f
+                        if fG == self.invar[hash_invar][i].sG:
+                            checked = True
+                            break
+                    if not checked:
+                        check_all = False
+        if check_all:
+            print("# Pass")
+        else:
+            print("# Failed.")
 
         if self.name != 'A':
             print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")

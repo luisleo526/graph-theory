@@ -21,7 +21,7 @@ def mappings_iterator(l1, l2):
 
 
 def map_all(l1s, l2s):
-    return map(lambda a: [y for x in a for y in x],
+    return map(lambda a: dict([y for x in a for y in x]),
                itertools.product(*[mappings_iterator(l1, l2) for l1, l2 in zip(l1s, l2s)]))
 
 
