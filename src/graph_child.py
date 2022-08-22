@@ -3,7 +3,7 @@ import sys
 from collections.abc import Iterable
 
 import numpy as np
-from sympy import symbols, LC, LM
+from sympy import symbols, LC, LM, Poly
 from sympy.matrices import Matrix
 
 from utils import hash_invar
@@ -36,6 +36,8 @@ class GraphChild:
                 self.edges.append((b, a))
             else:
                 self.edges.append((a, b))
+
+        self._has_triangle = None
 
     def __hash__(self):
         if self.hash is None:
@@ -116,6 +118,14 @@ class GraphChild:
                 _adj = np.delete(np.delete(self.adj, i, 0), i, 1)
                 self._invar_poly.append(Matrix(_adj).charpoly(symbols('x')).as_expr())
         return self._invar_poly
+
+    @property
+    def has_triangle(self):
+        if self._has_triangle is None:
+            indices = np.where(np.sum(self.adj, axis=1) > 3)[0]
+            topology = (np.sum(self.adj[indices]) - 3 * len(indices) + self.adj.shape[0]) + 2
+            self._has_triangle = abs(Poly(self.invar_poly[0]).coeffs()[2]) < topology + 1
+        return self.has_triangle
 
     @property
     def invar(self):

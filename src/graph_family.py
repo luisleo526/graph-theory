@@ -13,6 +13,8 @@ class GraphFamily:
         self.repr = None
         self.no = None
         self.o = None
+        self.tri = None
+        self.notri = None
         self.graphs = []
         self.name = name
         self.threads = threads
@@ -165,6 +167,10 @@ class GraphFamily:
             for cnt, g in enumerate(_list, 1):
                 g.name = prefix + str(cnt)
                 g.id = cnt - 1 + s
+                if g.sG.has_triangle:
+                    self.tri.append(g)
+                else:
+                    self.notri.append(g)
 
         print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs "
               f"({len(self.repr) / len(self.graphs) * 100:.2f}%)")
@@ -188,6 +194,16 @@ class GraphFamily:
             for prefix, gs in [[self.name, self.o], [self.name + 'N', self.no]]:
                 for cnt, g in enumerate(gs, 1):
                     f.write(f"{prefix + str(cnt):>8s}: {g.sG.edges}\n")
+
+        with open(f"{directory}/{self.name}_graphs_tri.txt", "w") as f:
+            f.write(f"Number of graphs with triangles: {len(self.tri)}")
+            for g in self.tri:
+                f.write(f"{g.name:>8s}: {g.sG.edges}\n")
+
+        with open(f"{directory}/{self.name}_graphs_no_tri.txt", "w") as f:
+            f.write(f"Number of graphs without triangles: {len(self.notri)}")
+            for g in self.notri:
+                f.write(f"{g.name:>8s}: {g.sG.edges}\n")
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
