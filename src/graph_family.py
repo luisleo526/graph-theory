@@ -148,6 +148,8 @@ class GraphFamily:
         print(f"{datetime.now()}, Grouping {self.name} representatives by orientability")
         self.o = []
         self.no = []
+        self.tri = []
+        self.notri = []
         cores = min(self.threads, max(1, int(len(self.repr) / 1024)))
         with Manager() as manager:
             return_dict = manager.dict()
