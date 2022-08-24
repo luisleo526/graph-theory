@@ -315,8 +315,8 @@ def get_data(src_graphs, tgt_graphs, cores, n):
                     dtype=np.intc)
 
     details = np.zeros((len(src_graphs.o) + len(src_graphs.no),
-                      len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
-                     dtype=object)
+                        len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
+                       dtype=object)
 
     edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs.o[0].sG.edges)), dtype=np.intc)
 
@@ -390,6 +390,6 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
         rank = (matrix_rank(half_data), (matrix_rank(upper_left), matrix_rank(down_right)))
     else:
-        rank = 0
+        rank = (0, (0, 0))
 
     return (rows, tri_rows), (columns, tri_cols), (details, tri_details), (data, half_data, tri_data), rank
