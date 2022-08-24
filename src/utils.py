@@ -366,10 +366,10 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     dump_to_binary((data, details), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
 
     # triangle filtering
-    src_tri = [i for i in range(src_graphs.o) if src_graphs.o[i].sG.has_triangle]
-    src_notri = [i for i in range(src_graphs.o) if not src_graphs.o[i].sG.has_triangle]
-    tgt_tri = [i for i in range(tgt_graphs.o) if tgt_graphs.o[i].sG.has_triangle]
-    tgt_notri = [i for i in range(tgt_graphs.o) if not tgt_graphs.o[i].sG.has_triangle]
+    src_tri = [i for i in range(len(src_graphs.o)) if src_graphs.o[i].sG.has_triangle]
+    src_notri = [i for i in range(len(src_graphs.o)) if not src_graphs.o[i].sG.has_triangle]
+    tgt_tri = [i for i in range(len(tgt_graphs.o)) if tgt_graphs.o[i].sG.has_triangle]
+    tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
     tri_data = np.copy(half_data)
     tri_data = tri_data[src_tri + src_notri]
     tri_data = tri_data[:, tgt_tri + tgt_notri]

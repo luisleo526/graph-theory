@@ -130,23 +130,29 @@ if __name__ == '__main__':
                 f.write("-" + "\n")
 
         # --------------------------------------------------------------------------------------
+        # Prepare indices
+        src_tri = [i for i in range(len(src_graphs.o)) if src_graphs.o[i].sG.has_triangle]
+        src_notri = [i for i in range(len(src_graphs.o)) if not src_graphs.o[i].sG.has_triangle]
+        tgt_tri = [i for i in range(len(tgt_graphs.o)) if tgt_graphs.o[i].sG.has_triangle]
+        tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
+
         # Set data for triangle sorting
-        UL = infos[2][:len(src_graphs.tri), :len(tgt_graphs.tri)]
-        UL_details = details[1][:len(src_graphs.tri), :len(tgt_graphs.tri)]
+        UL = infos[2][:len(src_tri), :len(tgt_tri)]
+        UL_details = details[1][:len(src_tri), :len(tgt_tri)]
         UL_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(UL)):
             UL_indices[i].append(j)
 
-        DR = infos[2][-len(src_graphs.notri):, -len(tgt_graphs.tri):]
-        DR_details = details[1][-len(src_graphs.notri):, -len(tgt_graphs.tri):]
+        DR = infos[2][-len(src_notri):, -len(tgt_notri):]
+        DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
         DR_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(DR)):
             DR_indices[i].append(j)
         # --------------------------------------------------------------------------------------
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
             f.write(f"Rank: {ranks[1][0]}\n")
-            f.write(f"{src_graphs.name}: {len(src_graphs.tri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.tri)}\n")
+            f.write(f"{src_graphs.name}: {len(src_tri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_tri)}\n")
             for i in sorted(list(UL_indices.keys())):
                 UL_indices[i].sort()
                 for j in UL_indices[i]:
@@ -155,8 +161,8 @@ if __name__ == '__main__':
 
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
             f.write(f"Rank: {ranks[1][0]}\n")
-            f.write(f"{src_graphs.name}: {len(src_graphs.tri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.tri)}\n")
+            f.write(f"{src_graphs.name}: {len(src_notri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_notri)}\n")
             for i in sorted(list(DR_indices.keys())):
                 DR_indices[i].sort()
                 for j in DR_indices[i]:
