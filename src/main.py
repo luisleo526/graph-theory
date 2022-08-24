@@ -138,13 +138,13 @@ if __name__ == '__main__':
 
         # Set data for triangle sorting
         UL = infos[2][:len(src_tri), :len(tgt_tri)]
-        UL_details = details[1][:len(src_tri), :len(tgt_tri)]
+        UL_details = details[1][:-1][:len(src_tri), :len(tgt_tri)]
         UL_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(UL)):
             UL_indices[i].append(j)
 
         DR = infos[2][-len(src_notri):, -len(tgt_notri):]
-        DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
+        DR_details = details[1][:-1][-len(src_notri):, -len(tgt_notri):]
         DR_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(DR)):
             DR_indices[i].append(j)
