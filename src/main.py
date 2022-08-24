@@ -160,7 +160,7 @@ if __name__ == '__main__':
                 f.write("-" + "\n")
 
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
-            f.write(f"Rank: {ranks[1][0]}\n")
+            f.write(f"Rank: {ranks[1][1]}\n")
             f.write(f"{src_graphs.name}: {len(src_notri)}\n")
             f.write(f"{tgt_graphs.name}: {len(tgt_notri)}\n")
             for i in sorted(list(DR_indices.keys())):
