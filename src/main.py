@@ -156,7 +156,7 @@ if __name__ == '__main__':
             for i in sorted(list(UL_indices.keys())):
                 UL_indices[i].sort()
                 for j in UL_indices[i]:
-                    f.write(f"({columns[1][i]},{rows[1][j]}): {UL_details[i, j]} >> {UL[i, j]}\n")
+                    f.write(f"({columns[1][i]},{rows[1][j]}): {UL[i, j]} >> {UL_details[i, j]}\n")
                 f.write("-" + "\n")
 
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
@@ -166,7 +166,7 @@ if __name__ == '__main__':
             for i in sorted(list(DR_indices.keys())):
                 DR_indices[i].sort()
                 for j in DR_indices[i]:
-                    f.write(f"({columns[1][i]},{rows[1][j]}): {DR_details[i, j]} >> {DR[i, j]}\n")
+                    f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
                 f.write("-" + "\n")
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
