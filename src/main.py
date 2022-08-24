@@ -74,7 +74,8 @@ if __name__ == '__main__':
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
         rows, columns, details, infos, ranks = get_data(src_graphs, tgt_graphs, args.t, args.n)
-        all_ranks.append(ranks[0])
+        if infos[2].size > 0:
+            all_ranks.append(ranks[0])
 
         print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
 
