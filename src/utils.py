@@ -309,20 +309,30 @@ def get_data_task(p, n_cores, tgt_graphs, return_dict):
     return_dict[p] = f"./cache/{filename}"
 
 
-def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
+def get_data(src_graphs, tgt_graphs, cores, n):
     data = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                      len(tgt_graphs.o) + len(tgt_graphs.no)),
                     dtype=np.intc)
 
-    data2 = np.zeros((len(src_graphs.o) + len(src_graphs.no),
+    details = np.zeros((len(src_graphs.o) + len(src_graphs.no),
                       len(tgt_graphs.o) + len(tgt_graphs.no) + 1),
                      dtype=object)
 
     edges = np.zeros((len(src_graphs.o) + len(src_graphs.no), len(src_graphs.o[0].sG.edges)), dtype=np.intc)
 
-    for i in range(data2.shape[0]):
-        for j in range(data2.shape[1]):
-            data2[i, j] = ""
+    rows = []
+    columns = []
+    for d, g in [[columns, src_graphs], [rows, tgt_graphs]]:
+        for pref, l in [[g.name, len(g.o)], [g.name + 'N', len(g.no)]]:
+            for i in range(l):
+                d.append(pref + str(i + 1))
+
+    for i in range(details.shape[0]):
+        for j in range(details.shape[1]):
+            details[i, j] = ""
+
+    rows = np.array(rows)
+    columns = np.array(columns)
 
     print(f"{datetime.now()}, Constructing {src_graphs.name + tgt_graphs.name} full matrix of size "
           f"{len(src_graphs.o) + len(src_graphs.no)}x{len(tgt_graphs.o) + len(tgt_graphs.no)}")
@@ -341,35 +351,45 @@ def get_data(src_graphs, tgt_graphs, cores, n, skip_rank=False):
             job.join()
 
         for directory in list(return_dict.values()):
-            _data, _data2, _edges = load_from_binary(directory, rm=True)
+            _data, _details, _edges = load_from_binary(directory, rm=True)
             data = assign_values_from_index(data, _data)
-            data2 = assign_values_from_index(data2, _data2)
+            details = assign_values_from_index(details, _details)
             edges = assign_values_from_index(edges, _edges)
 
     for i in range(edges.shape[0]):
         for j in range(edges.shape[1]):
             if edges[i, j] == 0:
-                data2[i, -1] += f"#{j + 1}, "
+                details[i, -1] += f"#{j + 1}, "
 
     half_data = data[:len(src_graphs.o), :len(tgt_graphs.o)]
 
-    dump_to_binary((data, data2), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
+    dump_to_binary((data, details), f"./{n}_graphs/binary/{src_graphs.name + tgt_graphs.name}")
 
-    rows = []
-    columns = []
-    for d, g in [[columns, src_graphs], [rows, tgt_graphs]]:
-        for pref, l in [[g.name, len(g.o)], [g.name + 'N', len(g.no)]]:
-            for i in range(l):
-                d.append(pref + str(i + 1))
+    # triangle filtering
+    src_tri = [i for i in range(src_graphs.o) if src_graphs.o[i].sG.has_triangle]
+    src_notri = [i for i in range(src_graphs.o) if not src_graphs.o[i].sG.has_triangle]
+    tgt_tri = [i for i in range(tgt_graphs.o) if tgt_graphs.o[i].sG.has_triangle]
+    tgt_notri = [i for i in range(tgt_graphs.o) if not tgt_graphs.o[i].sG.has_triangle]
+    tri_data = np.copy(half_data)
+    tri_data = tri_data[src_tri + src_notri]
+    tri_data = tri_data[:, tgt_tri + tgt_notri]
 
-    if not skip_rank:
-        print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
-              f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
+    tri_details = np.copy(details)[:len(src_graphs.o), :len(tgt_graphs.o)]
+    tri_details = tri_details[src_tri + src_notri]
+    tri_details = tri_details[:, tgt_tri + tgt_notri]
 
-        if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
-            rank = matrix_rank(half_data)
-        else:
-            rank = 0
-        return rows, columns, data2, data, half_data, rank
+    upper_left = tri_data[:len(src_tri), :len(tgt_tri)]
+    down_right = tri_data[-len(src_notri):, -len(tgt_notri):]
+
+    tri_rows = rows[tgt_tri + tgt_notri]
+    tri_cols = columns[src_tri + src_notri]
+
+    print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
+          f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
+
+    if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
+        rank = (matrix_rank(half_data), (matrix_rank(upper_left), matrix_rank(down_right)))
     else:
-        return rows, columns, data2, data, half_data, None
+        rank = 0
+
+    return (rows, tri_rows), (columns, tri_cols), (details, tri_details), (data, half_data, tri_data), rank

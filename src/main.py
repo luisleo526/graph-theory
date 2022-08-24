@@ -19,8 +19,6 @@ def parse_args():
     parser.add_argument("-t", default=8, type=int)
     parser.add_argument("-from_graph", default="", type=str)
     parser.add_argument("-file", default="", type=str)
-    parser.add_argument("-skip_rank", action='store_true')
-    parser.add_argument("-to_excel", action='store_true')
     parser.add_argument("-find_binary", action='store_true')
     return parser.parse_args()
 
@@ -61,8 +59,8 @@ if __name__ == '__main__':
 
     all_ranks = []
     old_half = None
-    while True:
 
+    while True:
         if args.find_binary and os.path.exists(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}"):
             print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
             tgt_graphs = load_from_binary(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
@@ -70,101 +68,123 @@ if __name__ == '__main__':
         else:
             tgt_graphs = src_graphs.deeper_graphs()
             if len(tgt_graphs) == 0:
-                if not args.skip_rank:
-                    print('Ranks:', all_ranks)
+                print('Ranks:', all_ranks)
                 exit()
             tgt_graphs.set_repr()
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
-        rows, columns, details, full, half, rank = get_data(src_graphs, tgt_graphs, args.t, args.n, args.skip_rank)
-        if not args.skip_rank:
-            all_ranks.append(rank)
+        rows, columns, details, infos, ranks = get_data(src_graphs, tgt_graphs, args.t, args.n)
+        all_ranks.append(ranks[0])
 
         print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
 
-        if args.to_excel:
-            with pd.ExcelWriter(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.xlsx") as writer:
-                pd.DataFrame(data=full.transpose(), index=rows, columns=columns).to_excel(writer, sheet_name='Matrix')
-                pd.DataFrame(data=details.transpose(),
-                             index=rows + ["X"],
-                             columns=columns).to_excel(writer, sheet_name='Details')
-                if not args.skip_rank:
-                    pd.DataFrame(data={'rank': [rank]}).to_excel(writer, sheet_name='Ranks')
-                pd.DataFrame(data={'# of ZeroColumns': [len(np.where(~full.any(axis=1))[0])]}).to_excel(
-                    writer, sheet_name='ZerosColumns')
-                if half.size > 0:
-                    pd.DataFrame(data={'Column ID': [x + 1 for x in list(
-                        np.where(~half.any(axis=1))[0])]}).to_excel(writer, sheet_name='ZC of Orientable')
-        else:
-            data = defaultdict(list)
-            for i, j in np.transpose(np.nonzero(details)):
-                data[i].append(j)
-            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.txt", "w") as f:
-                f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
-                f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
-                f.write(f"Rank: {rank}\n")
-                f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
-                f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}\n")
-                f.write("-" * 40 + "\n")
-                for i in sorted(list(data.keys())):
-                    data[i].sort()
-                    for j in data[i]:
-                        if j != details.shape[1] - 1:
-                            f.write(f"({columns[i]},{rows[j]}): {full[i, j]} >> {details[i, j]}\n")
-                        else:
-                            f.write(f"({columns[i]}, X): {details[i, j]}\n")
-                    f.write("-" + "\n")
-
-            data = defaultdict(list)
-            for i, j in np.transpose(np.nonzero(details)):
-                if j != details.shape[1] - 1:
-                    data[j].append(i)
-            unbind_data = np.sum(details.T[:-1] != "", axis=1)
-            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
-                f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
-                f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
-                f.write(f"Rank: {rank}\n")
-                f.write(f"# of ZeroColumns (full): {len(np.where(~full.any(axis=1))[0])}\n")
-                f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~half.any(axis=1))[0])]}\n")
-                f.write("-" * 40 + "\n")
-                for j in sorted(list(data.keys())):
-                    data[j].sort()
-                    if j >= len(tgt_graphs.o):
-                        tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
-                        msg = f"{rows[j]} unbind numbers (data, computed): (" \
-                              f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data}," \
-                              f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind})"
+        # --------------------------------------------------------------------------------------
+        # All details
+        data = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(details[0])):
+            data[i].append(j)
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}.txt", "w") as f:
+            f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
+            f.write(f"Rank: {ranks[0]}\n")
+            f.write(f"# of ZeroColumns (full): {len(np.where(~infos[0].any(axis=1))[0])}\n")
+            f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~infos[0].any(axis=1))[0])]}\n")
+            f.write("-" * 40 + "\n")
+            for i in sorted(list(data.keys())):
+                data[i].sort()
+                for j in data[i]:
+                    if j != details[0].shape[1] - 1:
+                        f.write(f"({columns[0][i]},{rows[0][j]}): {infos[0][i, j]} >> {details[0][i, j]}\n")
                     else:
-                        tgt_graphs.o[j].unbind_from_data = unbind_data[j]
-                        msg = f"{rows[j]} unbind numbers (data, computed): ({tgt_graphs.o[j].unbind_from_data}," \
-                              f"{tgt_graphs.o[j].unbind})"
-                    for i in data[j]:
-                        f.write(f"({rows[j]}, {columns[i]}): {full[i, j]} >> {details[i, j]}\n")
-                    f.write(f"{msg}\n")
-                    f.write("-" + "\n")
+                        f.write(f"({columns[0][i]}, X): {details[0][i, j]}\n")
+                f.write("-" + "\n")
 
-            print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
-            checked = True
-            for g in tgt_graphs.repr:
-                if g.unbind != g.unbind_from_data:
-                    checked = False
-                    break
-            if checked:
-                print("# Pass")
-            else:
-                print("# Failed.")
+        # --------------------------------------------------------------------------------------
+        # All details of transpose
+        data = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(details[0])):
+            if j != details[0].shape[1] - 1:
+                data[j].append(i)
+        unbind_data = np.sum(details[0].T[:-1] != "", axis=1)
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_invert.txt", "w") as f:
+            f.write(f"{src_graphs.name}: {len(src_graphs.o)}/{len(src_graphs.no)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.o)}/{len(tgt_graphs.no)}\n")
+            f.write(f"Rank: {ranks[0]}\n")
+            f.write(f"# of ZeroColumns (full): {len(np.where(~infos[0].any(axis=1))[0])}\n")
+            f.write(f"Column ID (half): {[x + 1 for x in list(np.where(~infos[1].any(axis=1))[0])]}\n")
+            f.write("-" * 40 + "\n")
+            for j in sorted(list(data.keys())):
+                data[j].sort()
+                if j >= len(tgt_graphs.o):
+                    tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data = unbind_data[j]
+                    msg = f"{rows[0][j]} unbind numbers (data, computed): (" \
+                          f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind_from_data}," \
+                          f"{tgt_graphs.no[j - len(tgt_graphs.o)].unbind})"
+                else:
+                    tgt_graphs.o[j].unbind_from_data = unbind_data[j]
+                    msg = f"{rows[0][j]} unbind numbers (data, computed): ({tgt_graphs.o[j].unbind_from_data}," \
+                          f"{tgt_graphs.o[j].unbind})"
+                for i in data[j]:
+                    f.write(f"({rows[0][j]}, {columns[0][i]}): {infos[0][i, j]} >> {details[0][i, j]}\n")
+                f.write(f"{msg}\n")
+                f.write("-" + "\n")
 
-        if old_half is not None and half.size > 0:
+        # --------------------------------------------------------------------------------------
+        # Set data for triangle sorting
+        UL = infos[2][:len(src_graphs.tri), :len(tgt_graphs.tri)]
+        UL_details = details[1][:len(src_graphs.tri), :len(tgt_graphs.tri)]
+        UL_indices = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(UL)):
+            UL_indices[i].append(j)
+
+        DR = infos[2][-len(src_graphs.notri):, -len(tgt_graphs.tri):]
+        DR_details = details[1][-len(src_graphs.notri):, -len(tgt_graphs.tri):]
+        DR_indices = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(DR)):
+            DR_indices[i].append(j)
+        # --------------------------------------------------------------------------------------
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
+            f.write(f"Rank: {ranks[1][0]}\n")
+            f.write(f"{src_graphs.name}: {len(src_graphs.tri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.tri)}\n")
+            for i in sorted(list(UL_indices.keys())):
+                UL_indices[i].sort()
+                for j in UL_indices[i]:
+                    f.write(f"({columns[1][i]},{rows[1][j]}): {UL_details[i, j]} >> {UL[i, j]}\n")
+                f.write("-" + "\n")
+
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
+            f.write(f"Rank: {ranks[1][0]}\n")
+            f.write(f"{src_graphs.name}: {len(src_graphs.tri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_graphs.tri)}\n")
+            for i in sorted(list(DR_indices.keys())):
+                DR_indices[i].sort()
+                for j in DR_indices[i]:
+                    f.write(f"({columns[1][i]},{rows[1][j]}): {DR_details[i, j]} >> {DR[i, j]}\n")
+                f.write("-" + "\n")
+
+        print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
+        checked = True
+        for g in tgt_graphs.repr:
+            if g.unbind != g.unbind_from_data:
+                checked = False
+                break
+        if checked:
+            print("# Pass")
+        else:
+            print("# Failed.")
+
+        if old_half is not None and infos[1].size > 0:
             print(f"{datetime.now()}, Checking half matrix multiplication for "
                   f"{old_half.name} and {src_graphs.name + tgt_graphs.name}...")
-            if np.all(mat_mult(old_half.data, half) == 0):
+            if np.all(mat_mult(old_half.data, infos[1]) == 0):
                 print("# Pass")
             else:
                 print("# Failed.")
 
         old_half = Munch()
         old_half.name = src_graphs.name + tgt_graphs.name
-        old_half.data = half
+        old_half.data = infos[1]
         tgt_graphs.export_to_binary(f"./{args.n}_graphs/binary")
         del src_graphs
         src_graphs = tgt_graphs
