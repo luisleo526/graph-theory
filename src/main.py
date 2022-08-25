@@ -148,11 +148,14 @@ if __name__ == '__main__':
         DR_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(DR)):
             DR_indices[i].append(j)
+
+        print(len(src_graphs.tri), len(src_tri), list(UL_indices.keys()))
+        print(len(tgt_graphs.tri), len(tgt_tri), list(DR_indices.keys()))
         # --------------------------------------------------------------------------------------
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
-            f.write(f"Rank: {ranks[1][0]}\n")
-            f.write(f"{src_graphs.name}: {len(src_tri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_tri)}\n")
+            f.write(f"Rank (UL, DR): {ranks[1]}\n")
+            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
             for i in sorted(list(UL_indices.keys())):
                 UL_indices[i].sort()
                 for j in UL_indices[i]:
@@ -160,9 +163,9 @@ if __name__ == '__main__':
                 f.write("-" + "\n")
 
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
-            f.write(f"Rank: {ranks[1][1]}\n")
-            f.write(f"{src_graphs.name}: {len(src_notri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_notri)}\n")
+            f.write(f"Rank (UL, DR): {ranks[1]}\n")
+            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
             for i in sorted(list(DR_indices.keys())):
                 DR_indices[i].sort()
                 for j in DR_indices[i]:
