@@ -149,8 +149,9 @@ if __name__ == '__main__':
         for i, j in np.transpose(np.nonzero(DR)):
             DR_indices[i].append(j)
 
-        print(len(src_tri), len(list(UL_indices.keys())))
-        print(len(tgt_tri), len(list(DR_indices.keys())))
+        print(len(src_tri), len(tgt_tri), len(src_notri), len(tgt_notri))
+        print(UL.shape, len(list(UL_indices.keys())))
+        print(DR.shape, len(list(DR_indices.keys())))
         # --------------------------------------------------------------------------------------
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
