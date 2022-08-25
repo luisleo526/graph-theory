@@ -109,23 +109,23 @@ class GraphFamily:
             for index in self.invar[invar]:
                 self.graphs[index].repr = self.graphs[self.invar[invar][0]]
 
-        print(f"{datetime.now()}, Checking existence of mappings for {self.name} representatives...")
-        check_all = True
-        for hash_invar in self.invar:
-            if len(self.invar[hash_invar]) > 1:
-                for i in self.invar[hash_invar][1:]:
-                    checked = False
-                    for f in map_all(self.graphs[self.invar[hash_invar][0]].sG.stdf, self.graphs[i].sG.stdf):
-                        fG = self.graphs[self.invar[hash_invar][0]].sG << f
-                        if fG == self.graphs[i].sG:
-                            checked = True
-                            break
-                    if not checked:
-                        check_all = False
-        if check_all:
-            print("# Pass")
-        else:
-            print("# Failed.")
+        # print(f"{datetime.now()}, Checking existence of mappings for {self.name} representatives...")
+        # check_all = True
+        # for hash_invar in self.invar:
+        #     if len(self.invar[hash_invar]) > 1:
+        #         for i in self.invar[hash_invar][1:]:
+        #             checked = False
+        #             for f in map_all(self.graphs[self.invar[hash_invar][0]].sG.stdf, self.graphs[i].sG.stdf):
+        #                 fG = self.graphs[self.invar[hash_invar][0]].sG << f
+        #                 if fG == self.graphs[i].sG:
+        #                     checked = True
+        #                     break
+        #             if not checked:
+        #                 check_all = False
+        # if check_all:
+        #     print("# Pass")
+        # else:
+        #     print("# Failed.")
 
         if self.name != 'A':
             print(f"{datetime.now()}, Computing orientability and Zh, Zs, Zr for {self.name} graphs")
