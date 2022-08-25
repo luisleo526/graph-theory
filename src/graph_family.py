@@ -224,3 +224,13 @@ class GraphFamily:
             else:
                 g.src = src_family.o[int(g.src[g.src.index(src_family.name) + 1:]) - 1]
             assert g.src_edge == g.src.sG.edges[g.edge_index]
+
+    @staticmethod
+    def inherit(src_family):
+        new_family = GraphFamily([], src_family.threads, src_family.name)
+        graphs = []
+        for g in src_family.graphs:
+            new_g = GraphParent(g.G.edges, g.threads, g.src, g.src_edge, g.edge_index)
+        new_family.graphs = graphs
+        new_family.set_repr()
+        return new_family

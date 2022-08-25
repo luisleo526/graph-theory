@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from munch import Munch
 from numba import set_num_threads
 
@@ -65,6 +64,7 @@ if __name__ == '__main__':
         if args.find_binary and os.path.exists(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}"):
             print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
             tgt_graphs = load_from_binary(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
+            tgt_graphs = GraphFamily.inherit(tgt_graphs)
             tgt_graphs.link(src_graphs)
         else:
             tgt_graphs = src_graphs.deeper_graphs()
@@ -73,9 +73,10 @@ if __name__ == '__main__':
                 print('Tri-Ranks', rank_tri)
                 exit()
             tgt_graphs.set_repr()
-            tgt_graphs.export_graphs(f"./{args.n}_graphs")
+        tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
         rows, columns, details, infos, ranks = get_data(src_graphs, tgt_graphs, args.t, args.n)
+        # (rows, tri_rows), (columns, tri_cols), (details, tri_details), (data, half_data, tri_data), rank
         all_ranks.append(ranks[0])
         rank_tri.append(ranks[1])
 
