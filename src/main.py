@@ -70,6 +70,7 @@ if __name__ == '__main__':
             tgt_graphs = src_graphs.deeper_graphs()
             if len(tgt_graphs) == 0:
                 print('Ranks:', all_ranks)
+                print('Tri-Ranks', rank_tri)
                 exit()
             tgt_graphs.set_repr()
             tgt_graphs.export_graphs(f"./{args.n}_graphs")
@@ -139,12 +140,12 @@ if __name__ == '__main__':
         tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
 
         # Set data for triangle sorting
+
         UL = infos[2][:len(src_tri), :len(tgt_tri)]
         UL_details = details[1][:len(src_tri), :len(tgt_tri)]
         UL_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(UL)):
             UL_indices[i].append(j)
-        # --------------------------------------------------------------------------------------
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
             f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
@@ -155,7 +156,7 @@ if __name__ == '__main__':
                     f.write(f"({columns[1][i]},{rows[1][j]}): {UL[i, j]} >> {UL_details[i, j]}\n")
                 f.write("-" + "\n")
 
-        print(len(src_tri), len(tgt_tri), UL.shape, len(list(UL_indices.keys())))
+        # --------------------------------------------------------------------------------------
 
         DR = infos[2][-len(src_notri):, -len(tgt_notri):]
         DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
@@ -172,8 +173,6 @@ if __name__ == '__main__':
                     for j in DR_indices[i]:
                         f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
                     f.write("-" + "\n")
-
-            print(len(src_notri), len(tgt_notri), DR.shape, len(list(DR_indices.keys())))
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
         checked = True
