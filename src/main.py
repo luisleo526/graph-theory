@@ -142,15 +142,6 @@ if __name__ == '__main__':
         UL_indices = defaultdict(list)
         for i, j in np.transpose(np.nonzero(UL)):
             UL_indices[i].append(j)
-
-        DR = infos[2][-len(src_notri):, -len(tgt_notri):]
-        DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
-        DR_indices = defaultdict(list)
-        for i, j in np.transpose(np.nonzero(DR)):
-            DR_indices[i].append(j)
-
-        print(len(src_tri), len(tgt_tri), UL.shape, len(list(UL_indices.keys())))
-        print(len(src_notri), len(tgt_notri), DR.shape, len(list(DR_indices.keys())))
         # --------------------------------------------------------------------------------------
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
@@ -162,15 +153,25 @@ if __name__ == '__main__':
                     f.write(f"({columns[1][i]},{rows[1][j]}): {UL[i, j]} >> {UL_details[i, j]}\n")
                 f.write("-" + "\n")
 
-        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
-            f.write(f"Rank (UL, DR): {ranks[1]}\n")
-            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
-            for i in sorted(list(DR_indices.keys())):
-                DR_indices[i].sort()
-                for j in DR_indices[i]:
-                    f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
-                f.write("-" + "\n")
+        print(len(src_tri), len(tgt_tri), UL.shape, len(list(UL_indices.keys())))
+
+        if len(src_notri) > 0 and len(tgt_notri) > 0:
+            DR = infos[2][-len(src_notri):, -len(tgt_notri):]
+            DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
+            DR_indices = defaultdict(list)
+            for i, j in np.transpose(np.nonzero(DR)):
+                DR_indices[i].append(j)
+            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
+                f.write(f"Rank (UL, DR): {ranks[1]}\n")
+                f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
+                f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
+                for i in sorted(list(DR_indices.keys())):
+                    DR_indices[i].sort()
+                    for j in DR_indices[i]:
+                        f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
+                    f.write("-" + "\n")
+
+            print(len(src_notri), len(tgt_notri), DR.shape, len(list(DR_indices.keys())))
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
         checked = True

@@ -370,6 +370,7 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     src_notri = [i for i in range(len(src_graphs.o)) if not src_graphs.o[i].sG.has_triangle]
     tgt_tri = [i for i in range(len(tgt_graphs.o)) if tgt_graphs.o[i].sG.has_triangle]
     tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
+
     tri_data = np.copy(half_data)
     tri_data = tri_data[src_tri + src_notri]
     tri_data = tri_data[:, tgt_tri + tgt_notri]
@@ -378,9 +379,6 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     tri_details = tri_details[src_tri + src_notri]
     tri_details = tri_details[:, tgt_tri + tgt_notri]
 
-    upper_left = tri_data[:len(src_tri), :len(tgt_tri)]
-    down_right = tri_data[-len(src_notri):, -len(tgt_notri):]
-
     tri_rows = rows[tgt_tri + tgt_notri]
     tri_cols = columns[src_tri + src_notri]
 
@@ -388,7 +386,13 @@ def get_data(src_graphs, tgt_graphs, cores, n):
           f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
 
     if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
-        rank = (matrix_rank(half_data), (matrix_rank(upper_left), matrix_rank(down_right)))
+        rank_regular = matrix_rank(half_data)
+        rank_ul = matrix_rank(tri_data[:len(src_tri), :len(tgt_tri)])
+        if len(src_notri) > 0 and len(tgt_notri) > 0:
+            rank_dr = matrix_rank(tri_data[-len(src_notri):, -len(tgt_notri):])
+        else:
+            rank_dr = 0
+        rank = (rank_regular, (rank_ul, rank_dr))
     else:
         rank = (0, (0, 0))
 
