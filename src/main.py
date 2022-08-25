@@ -58,6 +58,7 @@ if __name__ == '__main__':
         src_graphs.export_to_binary(f"./{args.n}_graphs/binary")
 
     all_ranks = []
+    rank_tri = []
     old_half = None
 
     while True:
@@ -75,6 +76,7 @@ if __name__ == '__main__':
 
         rows, columns, details, infos, ranks = get_data(src_graphs, tgt_graphs, args.t, args.n)
         all_ranks.append(ranks[0])
+        rank_tri.append(ranks[1])
 
         print(f"{datetime.now()}, Exporting data for {src_graphs.name + tgt_graphs.name} matrix")
 
@@ -155,16 +157,16 @@ if __name__ == '__main__':
 
         print(len(src_tri), len(tgt_tri), UL.shape, len(list(UL_indices.keys())))
 
-        if len(src_notri) > 0 and len(tgt_notri) > 0:
-            DR = infos[2][-len(src_notri):, -len(tgt_notri):]
-            DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
-            DR_indices = defaultdict(list)
-            for i, j in np.transpose(np.nonzero(DR)):
-                DR_indices[i].append(j)
-            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
-                f.write(f"Rank (UL, DR): {ranks[1]}\n")
-                f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
-                f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
+        DR = infos[2][-len(src_notri):, -len(tgt_notri):]
+        DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
+        DR_indices = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(DR)):
+            DR_indices[i].append(j)
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
+            f.write(f"Rank (UL, DR): {ranks[1]}\n")
+            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
+            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
+            if len(src_notri) > 0 and len(tgt_notri) > 0:
                 for i in sorted(list(DR_indices.keys())):
                     DR_indices[i].sort()
                     for j in DR_indices[i]:
