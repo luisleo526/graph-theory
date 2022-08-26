@@ -64,9 +64,7 @@ if __name__ == '__main__':
         if args.find_binary and os.path.exists(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}"):
             print(f"{datetime.now()}, Reading from ./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
             tgt_graphs_data = load_from_binary(f"./{args.n}_graphs/binary/{chr(ord(src_graphs.name) + 1)}")
-            tgt_graphs = GraphFamily([], args.t, chr(ord(src_graphs.name) + 1)).inherit(tgt_graphs_data)
-            print(len(tgt_graphs.graphs))
-            tgt_graphs.link(src_graphs)
+            tgt_graphs = GraphFamily([], args.t, chr(ord(src_graphs.name) + 1)).inherit(src_graphs, tgt_graphs_data)
         else:
             tgt_graphs = src_graphs.deeper_graphs()
             if len(tgt_graphs) == 0:

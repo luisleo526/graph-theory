@@ -217,21 +217,20 @@ class GraphFamily:
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
-    def link(self, src_family):
+    def inherit_task(self, i):
+        return GraphParent(self.tmp_var[i].G.edges, self.threads, self.tmp_var[i].src,
+                           self.tmp_var[i].src_edge, self.tmp_var[i].edge_index)
+
+    def inherit(self, src_family, siblings_family):
+
+        print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
+        self.tmp_var = siblings_family.graphs
+        self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
         for g in self.graphs:
             if 'N' in g.src:
                 g.src = src_family.no[int(g.src[g.src.index('N') + 1:]) - 1]
             else:
                 g.src = src_family.o[int(g.src[g.src.index(src_family.name) + 1:]) - 1]
             assert g.src_edge == g.src.sG.edges[g.edge_index]
-
-    def inherit_task(self, i):
-        return GraphParent(self.tmp_var[i].G.edges, self.threads, self.tmp_var[i].src,
-                           self.tmp_var[i].src_edge, self.tmp_var[i].edge_index)
-
-    def inherit(self, src_family):
-        print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
-        self.tmp_var = src_family.graphs
-        self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
         self.set_repr()
         del self.tmp_var
