@@ -181,7 +181,9 @@ if __name__ == '__main__':
 
         # --------------------------------------------------------------------------------------
         # Split by number of forks
-        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_forks.txt", "w") as f:
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_all_ranks.txt", "w") as f:
+            f.write(f"Rank of regular matrix: {ranks[0]}\n")
+            f.write(f"Rank by triangle sorting (UL, DR): {ranks[1]}\n")
             for n in range(3, tgt_graphs.max_forks+1):
                 src_pos = [i for i, g in enumerate(src_graphs.o) if g.forks <= n]
                 src_neg = [i for i, g in enumerate(src_graphs.o) if g.forks > n]
