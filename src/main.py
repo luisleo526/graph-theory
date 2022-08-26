@@ -182,7 +182,7 @@ if __name__ == '__main__':
         # --------------------------------------------------------------------------------------
         # Split by number of forks
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_forks.txt", "w") as f:
-            for n in range(3, tgt_graphs.max_forks):
+            for n in range(3, tgt_graphs.max_forks+1):
                 src_pos = [i for i, g in enumerate(src_graphs.o) if g.forks <= n]
                 src_neg = [i for i, g in enumerate(src_graphs.o) if g.forks > n]
                 tgt_pos = [i for i, g in enumerate(tgt_graphs.o) if g.forks <= n]
