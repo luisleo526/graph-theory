@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -23,6 +24,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
+
+    sys.setrecursionlimit(5000)
 
     args = parse_args()
 
