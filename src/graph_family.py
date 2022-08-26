@@ -40,7 +40,7 @@ class GraphFamily:
     @property
     def max_forks(self):
         if self._max_forks is None:
-            self._max_forks = max([rg.sG.forks for rg in self.repr])
+            self._max_forks = max([rg.forks for rg in self.repr])
         return self._max_forks
 
     def find_parent(self, i):
