@@ -14,6 +14,7 @@ def sign(x):
 class GraphParent:
 
     def __init__(self, edges, threads=4, src=None, src_edge=None, edge_index=None):
+        self._forks = None
         self._unbind = None
         self.unbind_from_data = None
         self._er_sets = None
@@ -124,3 +125,9 @@ class GraphParent:
         if self._unbind is None:
             self._unbind = find_unbind_number(self.sG.adj)
         return self._unbind
+
+    @property
+    def forks(self):
+        if self._forks is None:
+            self._forks = max(np.sum(self.sG.adj, axis=0))
+        return self._forks
