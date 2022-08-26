@@ -216,6 +216,7 @@ class GraphFamily:
             for g in self.graphs:
                 g.src.src = None
         dump_to_binary(self, f"{directory}/{self.name}")
+        self.graphs = None
 
     def inherit_task(self, i):
         return GraphParent(self.tmp_var[i].G.edges, self.threads, self.tmp_var[i].src,
