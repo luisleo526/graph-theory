@@ -108,9 +108,9 @@ class GraphParent:
     def er_sets(self):
         if self._er_sets is None:
             self._er_sets = []
-            for i in range(len(self.sG)):
+            for i in range(len(self.sG.edges)):
                 new_graph = []
-                for j in range(len(self.sG)):
+                for j in range(len(self.sG.edges)):
                     if j != i:
                         new_graph.append(h(self.sG.edges[j], self.sG.edges[i]))
                 _graph = GraphParent(edges=new_graph, threads=self.threads,
