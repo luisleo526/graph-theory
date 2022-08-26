@@ -224,13 +224,5 @@ class GraphFamily:
         print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
         self.tmp_var = siblings_family.graphs
         self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
-
-        for g in self.graphs:
-            if 'N' in g.src:
-                g.src = src_family.no[int(g.src[2:]) - 1]
-            else:
-                g.src = src_family.o[int(g.src[1:]) - 1]
-            assert g.src_edge == g.src.sG.edges[g.edge_index]
-
         self.set_repr()
         del self.tmp_var
