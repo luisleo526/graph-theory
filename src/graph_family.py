@@ -227,7 +227,7 @@ class GraphFamily:
             if 'N' in g.src.name:
                 print(g.src.sG.invar, src_family.no[int(g.src.name[2:]) - 1].sG.invar)
             else:
-                print(g.src.sG.invar, src_family.no[int(g.src.name[1:]) - 1].sG.invar)
+                print(g.src.sG.invar, src_family.o[int(g.src.name[1:]) - 1].sG.invar)
         self.graphs.sort()
         self.set_repr()
         del self.tmp_var
