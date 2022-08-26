@@ -232,6 +232,6 @@ class GraphFamily:
     def inherit(self, src_family):
         print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
         self.tmp_var = src_family.graphs
-        self.graphs = parallel_loop(self.inherit_task, len(self.graphs), self.threads)
+        self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
         self.set_repr()
         del self.tmp_var
