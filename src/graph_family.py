@@ -232,6 +232,6 @@ class GraphFamily:
             else:
                 g.src = src_family.o[int(g.src[g.src.index(src_family.name) + 1:]) - 1]
             print(g.src_edge, g.src.sG.edges[g.edge_index])
-            # assert g.src_edge == g.src.sG.edges[g.edge_index]
+            assert g.src_edge == g.src.sG.edges[g.edge_index]
         self.set_repr()
         del self.tmp_var
