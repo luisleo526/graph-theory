@@ -209,11 +209,9 @@ class GraphFamily:
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
-        for g in self.graphs:
-            try:
-                g.src = g.src.name
-            except:
-                pass
+        if self.name != 'A':
+            for g in self.graphs:
+                g.src.src = None
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
