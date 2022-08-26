@@ -9,6 +9,7 @@ from utils import parallel_loop, dump_to_binary, map_all
 class GraphFamily:
 
     def __init__(self, args, threads, name='A'):
+        self._max_forks = None
         self.invar = None
         self.repr = None
         self.no = None
@@ -35,6 +36,12 @@ class GraphFamily:
 
     def __getitem__(self, item):
         return self.graphs[item]
+
+    @property
+    def max_forks(self):
+        if self._max_forks is None:
+            self._max_forks = max([rg.sG.forks for rg in self.repr])
+        return self._max_forks
 
     def find_parent(self, i):
         return GraphParent(self.graphs[i], self.threads)

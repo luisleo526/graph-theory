@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 from munch import Munch
 from numba import set_num_threads
+from numpy.linalg import matrix_rank
 
 from graph_family import GraphFamily
 from utils import readGraph, get_data, load_from_binary, mat_mult
@@ -177,6 +178,21 @@ if __name__ == '__main__':
                     for j in DR_indices[i]:
                         f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
                     f.write("-" + "\n")
+
+        # --------------------------------------------------------------------------------------
+        # Split by number of forks
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_forks.txt", "w") as f:
+            for n in range(3, tgt_graphs.max_forks):
+                src_pos = [i for i, g in enumerate(src_graphs.o) if g.forks <= n]
+                src_neg = [i for i, g in enumerate(src_graphs.o) if g.forks > n]
+                tgt_pos = [i for i, g in enumerate(tgt_graphs.o) if g.forks <= n]
+                tgt_neg = [i for i, g in enumerate(tgt_graphs.o) if g.forks > n]
+                ul = infos[1][src_pos][:, tgt_pos]
+                dr = infos[1][src_neg][:, tgt_neg]
+                ul_rank = matrix_rank(ul) if ul.size > 0 else 0
+                dr_rank = matrix_rank(dr) if dr.size > 0 else 0
+                f.write(f"Rank (UL, DR, {n}): ({ul_rank},{dr_rank})\n")
+        # --------------------------------------------------------------------------------------
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
         checked = True
