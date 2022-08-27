@@ -219,9 +219,11 @@ class GraphFamily:
 
     def export_to_binary(self, directory):
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
-        if self.name != 'A':
-            for g in self.graphs:
-                g.src.src = None
+        for g in self.graphs:
+            try:
+                g.src = g.src.name
+            except:
+                pass
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
@@ -229,12 +231,18 @@ class GraphFamily:
         return GraphParent(self.tmp_var[i].G.edges, self.threads, self.tmp_var[i].src,
                            self.tmp_var[i].src_edge, self.tmp_var[i].edge_index)
 
-    def inherit(self, siblings_family):
+    def inherit(self, src_family, siblings_family):
 
         print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
         self.tmp_var = siblings_family.graphs
         self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
         self.set_hash()
         self.graphs.sort()
+        for g in self.graphs:
+            if 'N' in g.src:
+                g.src = src_family.no[int(g.src[2:]) - 1]
+            else:
+                g.src = src_family.o[int(g.src[1:]) - 1]
+            assert g.src_edge == g.src.sG.edges[g.edge_index]
         self.set_repr()
         del self.tmp_var
