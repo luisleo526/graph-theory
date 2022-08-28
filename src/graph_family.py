@@ -244,6 +244,6 @@ class GraphFamily:
         self.graphs.sort()
         for g in self.graphs:
             g.src = src_family.repr[g.src_id]
-            assert g.src_edge == g.src.sG.edges[g.edge_index]
+            assert g.src_edge == g.src.sG.edges[g.edge_index], f"{g.src.name}({g.edge_index}: {g.src_edge}, {g.src.sG.edges[g.edge_index]}"
         self.set_repr()
         del self.tmp_var
