@@ -387,13 +387,16 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
           f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
 
-    rank_regular = matrix_rank(half_data)
-
-    rank_ul = matrix_rank(ul)
-    if dr.size > 0:
-        rank_dr = matrix_rank(dr)
+    if half_data.size > 0:
+        rank_regular = matrix_rank(half_data)
+        rank_ul = matrix_rank(ul)
+        if dr.size > 0:
+            rank_dr = matrix_rank(dr)
+        else:
+            rank_dr = 0
     else:
-        rank_dr = 0
+        rank_regular = rank_ul = rank_dr = 0
+
     rank = (rank_regular, (rank_ul, rank_dr))
 
     return (rows, ul_rows, dr_rows), (columns, ul_cols, dr_cols), (details, ul_details, dr_details), \
