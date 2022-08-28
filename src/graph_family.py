@@ -224,16 +224,16 @@ class GraphFamily:
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
         for g in self.graphs:
             try:
-                g.src = g.src.name
+                g.src = g.src.sG.edges
             except:
                 pass
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
     def inherit_task(self, i):
-        return GraphParent(edges=self.tmp_var[i].G.edges, threads=self.threads, src=self.tmp_var[i].src,
-                           src_id=self.tmp_var[i].src_id, src_edge=self.tmp_var[i].src_edge,
-                           edge_index=self.tmp_var[i].edge_index)
+        src = GraphParent(edges=self.tmp_var[i].src, threads=self.threads)
+        return GraphParent(edges=self.tmp_var[i].G.edges, threads=self.threads, src=src,
+                           src_edge=self.tmp_var[i].src_edge, edge_index=self.tmp_var[i].edge_index)
 
     def inherit(self, src_family, siblings_family):
 
@@ -243,8 +243,6 @@ class GraphFamily:
         self.set_hash()
         self.graphs.sort()
         for g in self.graphs:
-            tmp = g.src
-            g.src = src_family.repr[g.src_id]
-            assert g.src_edge == g.src.sG.edges[g.edge_index], f"{tmp}, {g.src.name}"
+            assert g.src_edge == g.src.sG.edges[g.edge_index]
         self.set_repr()
         del self.tmp_var
