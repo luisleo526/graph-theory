@@ -199,21 +199,19 @@ if __name__ == '__main__':
         uldr = (uldr, uldr_details, uldr_rows, uldr_cols)
         dr = (dr, dr_details, dr_rows, dr_cols)
 
-        for data in [['forks_34', ulul], ['forks_5', uldr], ['forks_ge_6', dr]]:
-            print(data)
-            for suffix, var in data:
-                matrix, matrix_details, matrix_rows, matrix_cols = var
-                indices = defaultdict(list)
-                for i, j in np.transpose(np.nonzero(matrix_details)):
-                    indices[i].append(j)
-                with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_{suffix}.txt", "w") as f:
-                    f.write(f"Rank: {matrix_rank(matrix)}\n")
+        for suffix, (matrix, matrix_details, matrix_rows, matrix_cols) in [['forks_34', ulul], ['forks_5', uldr],
+                                                                           ['forks_ge_6', dr]]:
+            indices = defaultdict(list)
+            for i, j in np.transpose(np.nonzero(matrix_details)):
+                indices[i].append(j)
+            with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_{suffix}.txt", "w") as f:
+                f.write(f"Rank: {matrix_rank(matrix)}\n")
+                f.write("-" + "\n")
+                for i in sorted(list(indices.keys())):
+                    indices[i].sort()
+                    for j in indices[i]:
+                        f.write(f"({matrix_cols[i]},{matrix_rows[j]}): {matrix[i, j]} >> {matrix_details[i, j]}\n")
                     f.write("-" + "\n")
-                    for i in sorted(list(indices.keys())):
-                        indices[i].sort()
-                        for j in indices[i]:
-                            f.write(f"({matrix_cols[i]},{matrix_rows[j]}): {matrix[i, j]} >> {matrix_details[i, j]}\n")
-                        f.write("-" + "\n")
         # --------------------------------------------------------------------------------------
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
