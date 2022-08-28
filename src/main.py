@@ -80,7 +80,8 @@ if __name__ == '__main__':
         tgt_graphs.export_graphs(f"./{args.n}_graphs")
 
         rows, columns, details, infos, ranks = get_data(src_graphs, tgt_graphs, args.t, args.n)
-        # (rows, tri_rows), (columns, tri_cols), (details, tri_details), (data, half_data, tri_data), rank
+        # (rows, ul_rows, dr_rows), (columns, ul_cols, dr_cols), (details, ul_details, dr_details), \
+        # (data, half_data, ul, dr), rank
         all_ranks.append(ranks[0])
         rank_tri.append(ranks[1])
 
@@ -138,46 +139,30 @@ if __name__ == '__main__':
                 f.write("-" + "\n")
 
         # --------------------------------------------------------------------------------------
-        # Prepare indices
-        src_tri = [i for i in range(len(src_graphs.o)) if src_graphs.o[i].sG.has_triangle]
-        src_notri = [i for i in range(len(src_graphs.o)) if not src_graphs.o[i].sG.has_triangle]
-        tgt_tri = [i for i in range(len(tgt_graphs.o)) if tgt_graphs.o[i].sG.has_triangle]
-        tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
 
-        # Set data for triangle sorting
-
-        UL = infos[2][:len(src_tri), :len(tgt_tri)]
-        UL_details = details[1][:len(src_tri), :len(tgt_tri)]
-        UL_indices = defaultdict(list)
-        for i, j in np.transpose(np.nonzero(UL)):
-            UL_indices[i].append(j)
+        data = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(details[1])):
+            data[i].append(j)
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
-            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
-            for i in sorted(list(UL_indices.keys())):
-                UL_indices[i].sort()
-                for j in UL_indices[i]:
-                    f.write(f"({columns[1][i]},{rows[1][j]}): {UL[i, j]} >> {UL_details[i, j]}\n")
+            for i in sorted(list(data.keys())):
+                data[i].sort()
+                for j in data[i]:
+                    f.write(f"({columns[1][i]},{rows[1][j]}): {infos[2][i, j]} >> {details[1][i, j]}\n")
                 f.write("-" + "\n")
 
         # --------------------------------------------------------------------------------------
 
-        DR = infos[2][-len(src_notri):, -len(tgt_notri):]
-        DR_details = details[1][-len(src_notri):, -len(tgt_notri):]
-        DR_indices = defaultdict(list)
-        for i, j in np.transpose(np.nonzero(DR)):
-            DR_indices[i].append(j)
+        data = defaultdict(list)
+        for i, j in np.transpose(np.nonzero(details[2])):
+            data[i].append(j)
         with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
-            f.write(f"{src_graphs.name}: {len(src_tri)} / {len(src_notri)}\n")
-            f.write(f"{tgt_graphs.name}: {len(tgt_tri)} / {len(tgt_notri)}\n")
-            if len(src_notri) > 0 and len(tgt_notri) > 0:
-                for i in sorted(list(DR_indices.keys())):
-                    DR_indices[i].sort()
-                    for j in DR_indices[i]:
-                        f.write(f"({columns[1][i]},{rows[1][j]}): {DR[i, j]} >> {DR_details[i, j]}\n")
-                    f.write("-" + "\n")
+            for i in sorted(list(data.keys())):
+                data[i].sort()
+                for j in data[i]:
+                    f.write(f"({columns[2][i]},{rows[2][j]}): {infos[3][i, j]} >> {details[2][i, j]}\n")
+                f.write("-" + "\n")
 
         # --------------------------------------------------------------------------------------
         # Split by number of forks

@@ -371,29 +371,30 @@ def get_data(src_graphs, tgt_graphs, cores, n):
     tgt_tri = [i for i in range(len(tgt_graphs.o)) if tgt_graphs.o[i].sG.has_triangle]
     tgt_notri = [i for i in range(len(tgt_graphs.o)) if not tgt_graphs.o[i].sG.has_triangle]
 
-    tri_data = np.copy(half_data)
-    tri_data = tri_data[src_tri + src_notri]
-    tri_data = tri_data[:, tgt_tri + tgt_notri]
+    ul = half_data[src_tri][:, tgt_tri]
+    dr = half_data[src_notri][:, tgt_notri]
+    tri_details = details[:len(src_graphs.o), :len(tgt_graphs.o)]
+    ul_details = tri_details[src_tri][:, tgt_tri]
+    dr_details = tri_details[src_notri][:, tgt_notri]
 
-    tri_details = np.copy(details)[:len(src_graphs.o), :len(tgt_graphs.o)]
-    tri_details = tri_details[src_tri + src_notri]
-    tri_details = tri_details[:, tgt_tri + tgt_notri]
-
-    tri_rows = rows[tgt_tri + tgt_notri]
-    tri_cols = columns[src_tri + src_notri]
+    tri_rows = rows[:len(tgt_graphs.o)]
+    tri_cols = columns[:len(src_graphs.o)]
+    ul_rows = tri_rows[tgt_tri]
+    dr_rows = tri_rows[tgt_notri]
+    ul_cols = tri_cols[src_tri]
+    dr_cols = tri_cols[src_notri]
 
     print(f"{datetime.now()}, Computing rank of {src_graphs.name + tgt_graphs.name} half matrix of size "
           f"{len(src_graphs.o)}x{len(tgt_graphs.o)}")
 
-    if len(src_graphs.o) > 0 and len(tgt_graphs.o) > 0:
-        rank_regular = matrix_rank(half_data)
-        rank_ul = matrix_rank(tri_data[:len(src_tri), :len(tgt_tri)])
-        if len(src_notri) > 0 and len(tgt_notri) > 0:
-            rank_dr = matrix_rank(tri_data[-len(src_notri):, -len(tgt_notri):])
-        else:
-            rank_dr = 0
-        rank = (rank_regular, (rank_ul, rank_dr))
-    else:
-        rank = (0, (0, 0))
+    rank_regular = matrix_rank(half_data)
 
-    return (rows, tri_rows), (columns, tri_cols), (details, tri_details), (data, half_data, tri_data), rank
+    rank_ul = matrix_rank(ul)
+    if dr.size > 0:
+        rank_dr = matrix_rank(dr)
+    else:
+        rank_dr = 0
+    rank = (rank_regular, (rank_ul, rank_dr))
+
+    return (rows, ul_rows, dr_rows), (columns, ul_cols, dr_cols), (details, ul_details, dr_details), \
+           (data, half_data, ul, dr), rank
