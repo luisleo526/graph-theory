@@ -143,7 +143,7 @@ if __name__ == '__main__':
         data = defaultdict(list)
         for i, j in np.transpose(np.nonzero(details[1])):
             data[i].append(j)
-        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_UL.txt", "w") as f:
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_tri_UL.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
             for i in sorted(list(data.keys())):
                 data[i].sort()
@@ -156,7 +156,7 @@ if __name__ == '__main__':
         data = defaultdict(list)
         for i, j in np.transpose(np.nonzero(details[2])):
             data[i].append(j)
-        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_DR.txt", "w") as f:
+        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_tri_DR.txt", "w") as f:
             f.write(f"Rank (UL, DR): {ranks[1]}\n")
             for i in sorted(list(data.keys())):
                 data[i].sort()
@@ -165,20 +165,53 @@ if __name__ == '__main__':
                 f.write("-" + "\n")
 
         # --------------------------------------------------------------------------------------
-        # Split by number of forks
-        with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_all_ranks.txt", "w") as f:
-            f.write(f"Rank of regular matrix: {ranks[0]}\n")
-            f.write(f"Rank by triangle sorting (UL, DR): {ranks[1]}\n")
-            for n in range(3, tgt_graphs.max_forks+1):
-                src_pos = [i for i, g in enumerate(src_graphs.o) if g.forks <= n]
-                src_neg = [i for i, g in enumerate(src_graphs.o) if g.forks > n]
-                tgt_pos = [i for i, g in enumerate(tgt_graphs.o) if g.forks <= n]
-                tgt_neg = [i for i, g in enumerate(tgt_graphs.o) if g.forks > n]
-                ul = infos[1][src_pos][:, tgt_pos]
-                dr = infos[1][src_neg][:, tgt_neg]
-                ul_rank = matrix_rank(ul) if ul.size > 0 else 0
-                dr_rank = matrix_rank(dr) if dr.size > 0 else 0
-                f.write(f"Rank (UL, DR, {n}): ({ul_rank},{dr_rank})\n")
+        src_lt_6 = [(i, g) for i, g in enumerate(src_graphs.o + src_graphs.no) if g.forks < 6]
+        src_ge_6 = [(i, g) for i, g in enumerate(src_graphs.o + src_graphs.no) if g.forks >= 6]
+        tgt_lt_6 = [(i, g) for i, g in enumerate(tgt_graphs.o + tgt_graphs.no) if g.forks < 6]
+        tgt_ge_6 = [(i, g) for i, g in enumerate(tgt_graphs.o + tgt_graphs.no) if g.forks >= 6]
+
+        src_lt_5 = [i for i, x in enumerate(src_lt_6) if x[1].forks < 5]
+        src_ge_5 = [i for i, x in enumerate(src_lt_6) if x[1].forks >= 5]
+        tgt_lt_5 = [i for i, x in enumerate(tgt_lt_6) if x[1].forks < 5]
+        tgt_ge_5 = [i for i, x in enumerate(tgt_lt_6) if x[1].forks >= 5]
+
+        ul = infos[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
+        ul_details = details[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
+        ul_rows = rows[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
+        ul_cols = columns[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
+
+        dr = infos[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
+        dr_details = details[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
+        dr_rows = rows[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
+        dr_cols = rows[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
+
+        ulul = ul[src_lt_5][:, tgt_lt_5]
+        ulul_details = ul_details[src_lt_5][:, tgt_lt_5]
+        ulul_rows = ul_rows[src_lt_5][:, tgt_lt_5]
+        ulul_cols = ul_cols[src_lt_5][:, tgt_lt_5]
+
+        uldr = ul[src_ge_5][:, tgt_ge_5]
+        uldr_details = ul_details[src_ge_5][:, tgt_ge_5]
+        uldr_rows = ul_rows[src_ge_5][:, tgt_ge_5]
+        uldr_cols = ul_cols[src_ge_5][:, tgt_ge_5]
+
+        ulul = (ulul, ulul_details, ulul_rows, ulul_cols)
+        uldr = (uldr, uldr_details, uldr_rows, uldr_cols)
+        dr = (dr, dr_details, dr_rows, dr_cols)
+
+        for data in [['forks_34', ulul], ['forks_5', uldr], ['forks_ge_6', dr]]:
+            for suffix, (matrix, matrix_details, matrix_rows, matrix_cols) in data:
+                indices = defaultdict(list)
+                for i, j in np.transpose(np.nonzero(matrix_details)):
+                    indices[i].append(j)
+                with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_{suffix}.txt", "w") as f:
+                    f.write(f"Rank: {matrix_rank(matrix)}\n")
+                    f.write("-" + "\n")
+                    for i in sorted(list(indices.keys())):
+                        indices[i].sort()
+                        for j in indices[i]:
+                            f.write(f"({matrix_cols[i]},{matrix_rows[j]}): {matrix[i, j]} >> {matrix_details[i, j]}\n")
+                        f.write("-" + "\n")
         # --------------------------------------------------------------------------------------
 
         print(f"{datetime.now()}, Checking unbind number for {tgt_graphs.name} graphs...")
