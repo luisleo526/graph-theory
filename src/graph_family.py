@@ -184,6 +184,9 @@ class GraphFamily:
                 else:
                     self.notri.append(g)
 
+        for i in range(len(self.repr)):
+            self.repr[i].repr_id = i
+
         print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs "
               f"({len(self.repr) / len(self.graphs) * 100:.2f}%)")
 
@@ -221,7 +224,7 @@ class GraphFamily:
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
         for g in self.graphs:
             try:
-                g.src = g.src.name
+                g.src = None
             except:
                 pass
         dump_to_binary(self, f"{directory}/{self.name}")
@@ -239,10 +242,7 @@ class GraphFamily:
         self.set_hash()
         self.graphs.sort()
         for g in self.graphs:
-            if 'N' in g.src:
-                g.src = src_family.no[int(g.src[2:]) - 1]
-            else:
-                g.src = src_family.o[int(g.src[1:]) - 1]
+            g.src = src_family.repr[g.src_id]
             assert g.src_edge == g.src.sG.edges[g.edge_index]
         self.set_repr()
         del self.tmp_var
