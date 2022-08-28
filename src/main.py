@@ -175,15 +175,20 @@ if __name__ == '__main__':
         tgt_lt_5 = [i for i, x in enumerate(tgt_lt_6) if x[1].forks < 5]
         tgt_ge_5 = [i for i, x in enumerate(tgt_lt_6) if x[1].forks >= 5]
 
-        ul = infos[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
-        ul_details = details[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
-        ul_rows = rows[0][[x[0] for x in tgt_lt_6]]
-        ul_cols = columns[0][[x[0] for x in src_lt_6]]
+        src_lt_6 = [i for i, g in enumerate(src_graphs.o + src_graphs.no) if g.forks < 6]
+        src_ge_6 = [i for i, g in enumerate(src_graphs.o + src_graphs.no) if g.forks >= 6]
+        tgt_lt_6 = [i for i, g in enumerate(tgt_graphs.o + tgt_graphs.no) if g.forks < 6]
+        tgt_ge_6 = [i for i, g in enumerate(tgt_graphs.o + tgt_graphs.no) if g.forks >= 6]
 
-        dr = infos[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
-        dr_details = details[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
-        dr_rows = rows[0][[x[0] for x in tgt_ge_6]]
-        dr_cols = rows[0][[x[0] for x in src_ge_6]]
+        ul = infos[0][src_lt_6][:, tgt_lt_6]
+        ul_details = details[0][src_lt_6][:, tgt_lt_6]
+        ul_rows = rows[0][tgt_lt_6]
+        ul_cols = columns[0][src_lt_6]
+
+        dr = infos[0][src_ge_6][:, tgt_ge_6]
+        dr_details = details[0][src_ge_6][:, tgt_ge_6]
+        dr_rows = rows[0][tgt_ge_6]
+        dr_cols = columns[0][src_ge_6]
 
         ulul = ul[src_lt_5][:, tgt_lt_5]
         ulul_details = ul_details[src_lt_5][:, tgt_lt_5]
