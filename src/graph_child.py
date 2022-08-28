@@ -55,7 +55,7 @@ class GraphChild:
             val = primes[np.product(indices) % len(primes)]
             for i, (a, b) in enumerate(sorted(self.edges)):
                 val = val - primes[2 * i] * b + primes[2 * i + 1] * a
-            self.hash = val
+            self.hash = int(val)
         return self.hash
 
     def __eq__(self, other):
