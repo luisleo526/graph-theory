@@ -231,8 +231,9 @@ class GraphFamily:
         self.graphs = None
 
     def inherit_task(self, i):
-        return GraphParent(self.tmp_var[i].G.edges, self.threads, self.tmp_var[i].src,
-                           self.tmp_var[i].src_edge, self.tmp_var[i].edge_index)
+        return GraphParent(edges=self.tmp_var[i].G.edges, threads=self.threads, src=self.tmp_var[i].src,
+                           src_id=self.tmp_var[i].src_id, src_edge=self.tmp_var[i].src_edge,
+                           edge_index=self.tmp_var[i].edge_index)
 
     def inherit(self, src_family, siblings_family):
 
