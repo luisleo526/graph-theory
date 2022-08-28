@@ -177,23 +177,23 @@ if __name__ == '__main__':
 
         ul = infos[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
         ul_details = details[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
-        ul_rows = rows[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
-        ul_cols = columns[0][[x[0] for x in src_lt_6]][:, [x[0] for x in tgt_lt_6]]
+        ul_rows = rows[0][[x[0] for x in tgt_lt_6]]
+        ul_cols = columns[0][[x[0] for x in src_lt_6]]
 
         dr = infos[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
         dr_details = details[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
-        dr_rows = rows[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
-        dr_cols = rows[0][[x[0] for x in src_ge_6]][:, [x[0] for x in tgt_ge_6]]
+        dr_rows = rows[0][[x[0] for x in tgt_ge_6]]
+        dr_cols = rows[0][[x[0] for x in src_ge_6]]
 
         ulul = ul[src_lt_5][:, tgt_lt_5]
         ulul_details = ul_details[src_lt_5][:, tgt_lt_5]
-        ulul_rows = ul_rows[src_lt_5][:, tgt_lt_5]
-        ulul_cols = ul_cols[src_lt_5][:, tgt_lt_5]
+        ulul_rows = ul_rows[tgt_lt_5]
+        ulul_cols = ul_cols[src_lt_5]
 
         uldr = ul[src_ge_5][:, tgt_ge_5]
         uldr_details = ul_details[src_ge_5][:, tgt_ge_5]
-        uldr_rows = ul_rows[src_ge_5][:, tgt_ge_5]
-        uldr_cols = ul_cols[src_ge_5][:, tgt_ge_5]
+        uldr_rows = ul_rows[tgt_ge_5]
+        uldr_cols = ul_cols[src_ge_5]
 
         ulul = (ulul, ulul_details, ulul_rows, ulul_cols)
         uldr = (uldr, uldr_details, uldr_rows, uldr_cols)
