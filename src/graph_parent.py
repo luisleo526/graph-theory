@@ -39,16 +39,16 @@ class GraphParent:
         self.name = None
 
     def __lt__(self, other):
-        return hash(self.sG) < hash(other.sG)
+        return self.sG < other.sG
 
     def __gt__(self, other):
-        return hash(self.sG) > hash(other.sG)
+        return self.sG > other.sG
 
     def __le__(self, other):
-        return hash(self.sG) <= hash(other.sG)
+        return self.sG <= other.sG
 
     def __ge__(self, other):
-        return hash(self.sG) >= hash(other.sG)
+        return self.sG >= other.sG
 
     def not_orientable(self, f):
         fG = self.sG << f
