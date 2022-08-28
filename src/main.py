@@ -200,7 +200,8 @@ if __name__ == '__main__':
         dr = (dr, dr_details, dr_rows, dr_cols)
 
         for data in [['forks_34', ulul], ['forks_5', uldr], ['forks_ge_6', dr]]:
-            for suffix, (matrix, matrix_details, matrix_rows, matrix_cols) in data:
+            for suffix, var in data:
+                matrix, matrix_details, matrix_rows, matrix_cols = var
                 indices = defaultdict(list)
                 for i, j in np.transpose(np.nonzero(matrix_details)):
                     indices[i].append(j)
