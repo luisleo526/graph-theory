@@ -25,11 +25,8 @@ class GraphFamily:
                 self.graphs = parallel_loop(self.find_parent, len(self.graphs), self.threads)
             else:
                 self.graphs = args
+            self.set_hash()
 
-        self.set_hash()
-        print(f"{datetime.now()}, Sorting {self.name} graphs")
-        # self.graphs = merge_sort_parallel(self.graphs)
-        self.graphs.sort()
 
     def __len__(self):
         return len(self.graphs)
@@ -74,6 +71,8 @@ class GraphFamily:
         results = parallel_loop(self.find_hash, len(self.graphs), self.threads)
         for i, hash_val in results:
             self.graphs[i].sG.hash = hash_val
+        print(f"{datetime.now()}, Sorting {self.name} graphs")
+        self.graphs.sort()
 
     def split_repr(self, p, cores, return_dict):
         start = p * int(len(self.repr) / cores)
@@ -229,20 +228,22 @@ class GraphFamily:
         self.graphs = None
 
     def inherit_task(self, i):
+
         src = GraphParent(edges=self.tmp_var[i].src[0], threads=self.threads)
         src.name = self.tmp_var[i].src[1]
         src.id = self.tmp_var[i].src[2]
+
+        assert self.tmp_var[i].src_edge == src.sG.edges[self.tmp_var[i].edge_index]
+
         return GraphParent(edges=self.tmp_var[i].G.edges, threads=self.threads, src=src,
                            src_edge=self.tmp_var[i].src_edge, edge_index=self.tmp_var[i].edge_index)
 
-    def inherit(self, src_family, siblings_family):
+    def inherit(self, siblings_family):
 
         print(f"{datetime.now()}, Inheriting data for {self.name} graphs")
         self.tmp_var = siblings_family.graphs
         self.graphs = parallel_loop(self.inherit_task, len(self.tmp_var), self.threads)
         self.set_hash()
         self.graphs.sort()
-        for g in self.graphs:
-            assert g.src_edge == g.src.sG.edges[g.edge_index]
         self.set_repr()
         del self.tmp_var
