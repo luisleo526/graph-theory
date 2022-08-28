@@ -51,8 +51,8 @@ class GraphChild:
 
     def __hash__(self):
         if self.hash is None:
-            indices = [len(primes) - i - 1 for i in range(len(self.stdf))]
-            val = np.product(primes[indices])
+            indices = [len(x) for x in self.stdf]
+            val = primes[np.product(indices) % len(primes)]
             for i, (a, b) in enumerate(sorted(self.edges)):
                 val = val - primes[2 * i] * b + primes[2 * i + 1] * a
             self.hash = val
