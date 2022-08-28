@@ -184,9 +184,6 @@ class GraphFamily:
                 else:
                     self.notri.append(g)
 
-        for i in range(len(self.repr)):
-            self.repr[i].repr_id = i
-
         print(f"{datetime.now()}, Found {len(self.o)}/{len(self.no)} for {self.name}/{self.name}N graphs "
               f"({len(self.repr) / len(self.graphs) * 100:.2f}%)")
 
@@ -224,14 +221,17 @@ class GraphFamily:
         print(f"{datetime.now()}, Exporting {self.name} object to binary")
         for g in self.graphs:
             try:
-                g.src = g.src.sG.edges
+                g.src = (g.src.G.edges, g.src.name, g.src.id)
+                g.repr = None
             except:
                 pass
         dump_to_binary(self, f"{directory}/{self.name}")
         self.graphs = None
 
     def inherit_task(self, i):
-        src = GraphParent(edges=self.tmp_var[i].src, threads=self.threads)
+        src = GraphParent(edges=self.tmp_var[i].src[0], threads=self.threads)
+        src.name = self.tmp_var[i].src[1]
+        src.id = self.tmp_var[i].src[2]
         return GraphParent(edges=self.tmp_var[i].G.edges, threads=self.threads, src=src,
                            src_edge=self.tmp_var[i].src_edge, edge_index=self.tmp_var[i].edge_index)
 

@@ -14,7 +14,7 @@ def sign(x):
 class GraphParent:
 
     def __init__(self, edges, threads=4, src=None, src_edge=None, edge_index=None):
-        self.repr_id = None
+
         self._forks = None
         self._unbind = None
         self.unbind_from_data = None
@@ -108,7 +108,7 @@ class GraphParent:
 
     @property
     def er_sets(self):
-        assert self.repr_id is not None
+
         if self._er_sets is None:
             self._er_sets = []
             for i in range(len(self.sG.edges)):
