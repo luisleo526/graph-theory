@@ -205,7 +205,8 @@ if __name__ == '__main__':
             for i, j in np.transpose(np.nonzero(matrix_details)):
                 indices[i].append(j)
             with open(f"./{args.n}_graphs/{src_graphs.name + tgt_graphs.name}_{suffix}.txt", "w") as f:
-                f.write(f"Rank: {matrix_rank(matrix)}\n")
+                rank_of_matrix = matrix_rank(matrix) if matrix.size > 0 else 0
+                f.write(f"Rank: {rank_of_matrix}\n")
                 f.write("-" + "\n")
                 for i in sorted(list(indices.keys())):
                     indices[i].sort()
